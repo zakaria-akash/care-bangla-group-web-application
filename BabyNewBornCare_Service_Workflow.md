@@ -1,39 +1,69 @@
-# Care Bangla — Baby & Newborn Care Service Journey
+# Care Bangla — Baby & Newborn Care Module Specification
 
-> Public workflow overview · [Return to the project overview](../README.md)
+> Developer-facing module reference. [Return to the technical overview](README.md).
 
-## Purpose
+## Naming and domain boundary
 
-Baby and newborn care is presented as a family-centered service journey. It gives parents and guardians a clear way to learn about support, select an appropriate option, and begin a private request without reducing a sensitive care need to a single generic form.
+The service domain is **Baby & Newborn Care** (`BabyCare…` / `baby-care` in the private application). The care role is **Nany** (`Nany…` / `nany`). The terminology split makes models, routes, CMS content, and applicant labels precise without introducing a public roster.
+
+This is a category booking flow. There is no `BabyCareMember`/`NanyMember` roster model; care-team assignment is coordinated outside public person selection.
 
 ```mermaid
 flowchart LR
-  A[Learn about newborn support] --> B[Choose a care option]
-  B --> C[Provide family requirements]
-  C --> D[Review request]
-  D --> E[Submit securely]
-  E --> F[Specialist staff review]
-  F --> G[Coordination and service follow-up]
+  Discovery[/service/baby-care] --> Tier[Nany tier]
+  Tier --> Form[/nanies/book/:nanyType]
+  Form --> Checkout[/nanies/checkout]
+  Checkout --> Server[Booking handler]
+  Server --> Pricing[Staffing-aware price computation]
+  Pricing --> DB[(BabyCareBooking)]
+  DB --> Admin[/admin/bookings]
 ```
 
-## Experience design
+## Model and content family
 
-| Area | Product behavior |
+| Model | Responsibility |
 |---|---|
-| Public content | Explains the service and provides an approachable route into the booking journey. |
-| Service selection | Supports care-option and duration context that can be tailored to newborn-care operations. |
-| Request handling | Creates a dedicated operational record rather than merging the request into unrelated service queues. |
-| Applicant pathway | Keeps relevant care-professional applications separate from family requests. |
-| Administration | Gives authorized staff service-specific visibility for coordination and status management. |
+| `BabyCareBooking` | Customer-owned date-range booking, shift/staffing choice, price snapshot, lifecycle/payment state, permitted documents. |
+| `BabyCareTier` | Nany tier qualification/presentation, rate, and card data. |
+| `BabyCareService` | Service catalogue entries. |
+| `BabyCareGalleryTab` | Alternating image/text preview rows. |
+| `NanyApplicant` | Recruitment submission data. |
+| `PageContent('baby-care')` | Page-level editorial composition. |
 
-## Why a dedicated workflow matters
+## Pricing and scheduling rules
 
-The product intentionally avoids assuming that every home-care service has identical intake, scheduling, or fulfillment needs. Baby/newborn care can evolve its own content, service tiers, validation, operational queue, and reporting while preserving shared account, localization, CMS, and security capabilities.
+| Input | Server-side rule |
+|---|---|
+| Shift | 12-hour rate from selected tier; standard 24-hour coverage uses two rotating Nanies. |
+| Staffing mode | 24-hour request distinguishes rotating coverage from same-Nany mode; the latter has a configured discounted 24-hour calculation. |
+| Duration | Inclusive date-range day calculation. |
+| Total | Derived daily rate × days, persisted as a snapshot with the booking. |
+| Conflict scope | Active overlap checks run against baby-care bookings rather than conflating care domains. |
+| Lifecycle | Payment/status invariants apply: payment only after active/confirmed/completed fulfillment; paid history cannot return to pending/cancelled; completed details lock. |
 
-## Future potential
+Client UI can show a live estimate, but the handler recomputes staffing branch, duration, and total before save. A request cannot submit its own trusted price.
 
-The modular design can accommodate recurring schedules, availability matching, care-plan notes, consent-aware document exchange, optional home-visit coordination, and family feedback loops. Any future feature involving sensitive health or child-related information must receive dedicated privacy, consent, and retention review.
+## Route and CMS map
 
-## Public-repository boundary
+| Layer | Route/module family | Responsibility |
+|---|---|---|
+| Public page | `service/[serviceId]` → `ServiceDetailsBabyCare` | Banner, intro, one tier card, preview rows, service grid, recruitment entry. |
+| Booking | `nanies/book/[nanyType]`, `nanies/checkout` | Category booking, staffing selector, authenticated checkout. |
+| Applicants | `nanies/apply-as-nany`, unified `admin/applicants` | Public application and staff review tab. |
+| Booking API | `api/baby-care-bookings` | Session-gated creation/history, server price recomputation, tier read. |
+| Staff console | Unified `admin/bookings`, admin baby-care handlers | Review, manual/phone entry, document append, guarded status/payment updates. |
+| Service CMS | `admin/services/baby-care` and tier/service/gallery handlers | Identity, structured images, tier, previews, CTA, catalogue. |
+| Fallback data | Baby-care tier/service/gallery data modules | Public rendering fallback only when defined editorial data is unavailable. |
 
-No family data, care details, staff records, internal policy, private implementation, or access controls are published in this showcase.
+## Shared implementation choices and roadmap
+
+- `PageBreadcrumb`, `SectionHeading`, `TierCard`, and `ServicePreviewGallery` ensure service-page consistency.
+- `ImageValue` metadata plus GridFS helpers provide accessible images without raw URL editing.
+- Applicant and family booking data are separate collections/workflows.
+- The unified booking console composes service tables without removing separate model/validation rules.
+
+Future work requires explicit design for recurring schedules, availability matching, consent-aware care documents, verified payment events, and multilingual family notifications.
+
+## Public boundary
+
+No family/applicant data, rates, staffing assignments, source code, or staff access details are included.

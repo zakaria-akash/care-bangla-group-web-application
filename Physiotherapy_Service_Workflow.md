@@ -1,37 +1,64 @@
-# Care Bangla — Physiotherapy Service Journey
+# Care Bangla — Physiotherapy Module Specification
 
-> Public workflow overview · [Return to the project overview](../README.md)
+> Developer-facing module reference. [Return to the technical overview](README.md).
 
-## Purpose
+## Domain difference: visit schedule, not shift range
 
-Physiotherapy is represented as a distinct, course-oriented care journey. The private platform can collect and coordinate a request in the context of planned visits, rather than treating a multi-visit service exactly like a one-time purchase or general inquiry.
+Physiotherapy is a course-oriented booking domain. It models a normalized list of 45–60 minute `{ date, time }` visits rather than a 12/24-hour date range. There is currently no public or staff specialist roster; specialist coordination remains an internal operational step.
 
 ```mermaid
 flowchart LR
-  A[Explore physiotherapy support] --> B[Choose service type or visit plan]
-  B --> C[Share request information]
-  C --> D[Review and submit]
-  D --> E[Physiotherapy operations queue]
-  E --> F[Assessment, visit coordination, and follow-up]
+  Discover[/service/physiotherapy] --> Builder[/physiotherapy/book/:type]
+  Builder --> Normalize[Normalize/dedupe date-time slots]
+  Normalize --> Price[Course price + discount engine]
+  Price --> Checkout[/physiotherapy/checkout]
+  Checkout --> API[Booking handler + gap guard]
+  API --> Queue[/admin/bookings]
 ```
 
-## Workflow characteristics
+## Model, schedule, and pricing
 
-| Characteristic | Why it matters |
+| Area | Technical behavior |
 |---|---|
-| Course-aware design | A therapy plan may involve more than one visit, so the workflow leaves room for service progression. |
-| Dedicated operational path | Physiotherapy requests are not mixed with unrelated nursing or consultation records. |
-| Specialist pipeline | Applicant and published-specialist workflows can evolve alongside the customer journey. |
-| Shared platform foundations | Validation, authenticated account access, multilingual content, messaging, and CMS controls remain consistent across the product. |
+| Models | `PhysiotherapyBooking` stores user-owned schedule, derived price/payment timing, status, documents; `PhysiotherapyApplicant` owns recruitment. |
+| Slot normalisation | Sort/deduplicate submitted date-time values and reject malformed/out-of-window visits. |
+| Visiting hours | Valid appointments fall between 06:00 and 22:00. |
+| Same-day spacing | Minimum 60 minutes between visits, both within a requested schedule and across the customer’s non-cancelled bookings. |
+| Base price | Rate per visit is derived from the specialist tier definition. |
+| Course rule | A qualifying 15+ visit course within its allowed consecutive-day span receives a configured whole-booking discount and advance-payment timing. |
+| Trusted total | Server persists normalized visits, subtotal, discount, total, and payment timing; the client estimate is not trusted. |
 
-## Operational model
+```ts
+// Conceptual pricing pipeline; not private code.
+const visits = normalizeVisits(input.visits);
+assertWithinOperatingHours(visits);
+assertMinGap(visits, 60);
+await assertNoConflictWithCustomerBookings(userId, visits);
+const quote = computeCoursePrice(visits, tier);
+```
 
-Authorized staff can use a dedicated workspace to review incoming requests, coordinate the next step, and manage status over time. The actual availability, clinical assessment, pricing policy, and assignment decisions remain private operational concerns; they are not exposed through this public repository.
+## Lifecycle and conflict rules
 
-## Extension potential
+Payment begins due. It may be marked paid only once work is confirmed, in progress, or complete. Paid records cannot return to pending/cancelled. Completed bookings remain operationally locked while payment reconciliation remains possible. Cancellation preserves history instead of deleting the record.
 
-The modular model can accommodate assessments, visit packages, specialist availability, route planning, recurring appointments, customer progress communication, and feedback. Clinical records or outcome tracking would need explicit consent, access-control, retention, and compliance design before implementation.
+`findVisitGapConflict()` protects a submitted schedule; `findConflictWithExistingBookings()` protects against overlaps with the same customer’s active history. The two checks exist because a valid internal schedule can still conflict with a previously created booking.
 
-## Public-repository boundary
+## Module map
 
-This is a product-level journey map. It intentionally contains no patient information, clinical details, staff schedules, operational policies, private APIs, or source code.
+| Layer | Route/module family | Responsibility |
+|---|---|---|
+| Discovery | `service/[serviceId]` → `ServiceDetailsPhysiotherapy` | Service narrative, tier, previews, service grid, booking/recruitment entry. |
+| Booking UI | `physiotherapy/book/[type]` → schedule builder | Date/time/repeat builder, grouped visits, removal, live estimate, discount feedback. |
+| Checkout | `physiotherapy/checkout` | Account details, day-by-day schedule review, documents, server-matched summary. |
+| Recruitment | `physiotherapy/apply-as-specialist` | Specialist applicant form and review pipeline. |
+| Public API | `api/physiotherapy-bookings`, `api/physiotherapy-applicants` | Owned history/creation and application submission. |
+| Staff console | Unified `admin/bookings` → `PhysiotherapyBookingsSection` | Review, manual booking, guarded state update, document append. |
+| Domain helpers | Physiotherapy tier data + visit-conflict helper | Normalisation, schedule shape, course price, shared conflict message. |
+
+## Engineering boundaries and future work
+
+The current design protects the customer’s own schedule, not a full therapist capacity roster. Future specialist calendars, route/availability optimization, online payment, clinical outcome records, and reminders require explicit capacity, consent, retention, and compliance decisions. Candidate tests: visit normalisation, time-window boundaries, same-day gaps, cross-booking conflict, discount threshold, and transition matrix.
+
+## Public boundary
+
+Exact fees, patient details, applicant records, specialist assignment, source implementation, and private schedules remain closed.

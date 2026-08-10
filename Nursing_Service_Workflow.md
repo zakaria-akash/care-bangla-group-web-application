@@ -1,46 +1,89 @@
-# Care Bangla — Home Nursing Service Journey
+# Care Bangla — Home Nursing Module Specification
 
-> Public workflow overview · [Return to the project overview](../README.md)
+> Developer-facing module reference. [Return to the technical overview](README.md).
 
-## Purpose
+## Module scope
 
-The home-nursing experience helps families move from understanding a care option to submitting a structured service request. It is one of the private platform's dedicated care workflows, built to retain the operational context a generic contact form would lose.
+Home nursing is a roster-capable, date-range booking domain. Families can select a nursing tier or an eligible named nurse, submit a 12/24-hour care request, and continue through checkout. Staff manage content, nurse profiles, bookings, documents, lifecycle state, and applicant records through protected route families.
 
 ```mermaid
 flowchart LR
-  A[Discover service] --> B[Choose care type and duration]
-  B --> C[Provide care context]
-  C --> D[Review request]
-  D --> E[Submit booking intent]
-  E --> F[Internal review and coordination]
-  F --> G[Service outcome and follow-up]
+  Discover[/service/nursing-care] --> Tier[Tier or nurse selection]
+  Tier --> Form[/nurses/book/:nurseType]
+  Form --> Checkout[/nurses/checkout]
+  Checkout --> API[Booking API]
+  API --> Guard[Pricing + conflict + status guard]
+  Guard --> DB[(Booking / nurse models)]
+  DB --> Admin[/admin/nurses/bookings]
 ```
 
-## Customer experience
+## Data model family
 
-1. A visitor learns about nursing support, scope, and the relevant care tier.
-2. The booking journey collects details appropriate to at-home care, rather than treating all services as the same form.
-3. The visitor reviews the request and continues through the applicable checkout or confirmation step.
-4. The request becomes a durable operational record for authorized staff follow-up.
-
-## Operations experience
-
-The staff workspace provides a service-specific booking queue. Team members can review the submitted context, progress the request through its operational lifecycle, and retain a clear history rather than relying on informal channels alone. Supporting applicant management helps the care-team pipeline remain distinct from the customer booking journey.
-
-## Product safeguards
-
-| Concern | Design intent |
+| Model | Responsibility |
 |---|---|
-| Appropriate data | Capture care-relevant information at the point of request and minimize unnecessary collection. |
-| Clear lifecycle | Keep booking status and payment/fulfillment state understandable to the operations team. |
-| Record integrity | Preserve the submitted booking context as an operational record; follow-up changes are traceable through the workflow. |
-| Access | Restrict operational views to authorized staff and avoid exposing booking details publicly. |
-| Adaptability | Allow tier, duration, pricing policy, and intake fields to evolve as the service matures. |
+| `Booking` | Customer-owned nursing request, date range, shift, derived price snapshot, lifecycle/payment state, documents, optional nurse relationship. |
+| `NurseTier` | Tier label, qualification/experience, 12-hour rate, eligibility/content shown in tier cards. |
+| `NurseMember` | Published roster profile, specialty/designation, public metadata, availability context, ordering and visibility. |
+| `NursingService` | Admin-managed service-catalogue items. |
+| `NursingGalleryTab` | Alternating feature/preview rows on the public service page. |
+| `NurseApplicant` | Nursing recruitment submission and review data. |
+| `PageContent` | Service-page editorial composition and CTA content. |
 
-## Extension potential
+## Server-authoritative pricing
 
-Potential next steps include capacity-aware nurse assignment, availability calendars, secure document exchange, payment settlement, automated reminders, and outcome reporting. Those integrations require deliberate clinical, privacy, and operational design; they are not implied by this public workflow overview.
+The browser can display an estimate, but the booking handler recomputes and snapshots price. This prevents a client-edited amount becoming the persisted charge context.
 
-## Public-repository boundary
+| Input | Rule |
+|---|---|
+| Shift | 12-hour rate from `NurseTier`; 24-hour coverage is calculated as two 12-hour shifts. |
+| Duration | Inclusive day-count calculation from start/end dates. |
+| Total | Derived daily rate × inclusive days, snapshotted on `Booking` creation. |
+| Later edits | Derived fields are immutable booking history, not recomputed from today’s tier values. |
 
-Booking rules, data fields, operational thresholds, staff identities, customer records, and source implementation are private. This document describes the product journey only.
+```ts
+// Conceptual only: trusted pricing belongs on the server.
+const tier = await nurseTierRepository.requirePublished(input.tierId);
+const dailyRate = input.shift === '24h' ? tier.rate12h * 2 : tier.rate12h;
+const total = dailyRate * inclusiveDays(input.startDate, input.endDate);
+```
+
+## Conflict and lifecycle engine
+
+The server evaluates overlapping active bookings before persistence using the requested range, selected nurse when applicable, and non-cancelled existing records. Client feedback can help the form but cannot be the authority.
+
+| Rule | Implementation intent |
+|---|---|
+| Payment starts due/unpaid | Submission does not make a service paid. |
+| Mark paid | Valid only for confirmed, in-progress, or completed work. |
+| Paid record | Cannot return to pending/cancelled, preserving delivery/payment history. |
+| Completed record | Operational detail locks; payment reconciliation remains allowed. |
+| Cancellation | Preserve record/history rather than delete an operational request. |
+
+## Route and component map
+
+| Layer | Route/module family | Responsibility |
+|---|---|---|
+| Discovery | `service/[serviceId]` → `ServiceDetailsNursingCare` | Banner, intro, tiers, gallery rows, service grid, roster slider, recruitment CTA. |
+| Booking | `nurses/book/[nurseType]`, `nurses/nurse-details/[nurseId]`, `nurses/checkout` | Category/named-nurse path, form, review, checkout. |
+| Public API | `api/bookings`, `api/nurses/*` | Published tier/roster reads and authenticated booking operations. |
+| Staff bookings | `admin/nurses/bookings`, admin nursing handlers | Lifecycle, payment, documents, customer selection, manual booking. |
+| Staff roster | `admin/nurses`, admin nurse handlers | Profile CRUD, order, publication. |
+| Service CMS | Nursing content/tier/service/gallery handlers | Editable service copy, tiers, visual rows, catalogue items. |
+| Media | GridFS and SEO-aware media route | Managed uploads and structured image output. |
+
+`PageBreadcrumb`, `SectionHeading`, `TierCard`, `ServicePreviewGallery`, `MedicalTeamSection`, and shared `Service` cards compose the public page. Defined public editorial records can use bundled fallback data; bookings/identity data never do.
+
+## Upgrade candidates
+
+| Current boundary | Upgrade path |
+|---|---|
+| Manual payment reconciliation | Verified gateway adapter with failed/refund handling. |
+| Admin-led lifecycle | Nurse portal/mobile shift and availability workflow. |
+| Fixed date range | Recurring booking/subscription model with conflict expansion. |
+| Manual assignment | Location/specialty/capacity matching service. |
+| Flat staff role | Dispatcher/finance/editor/super-admin roles with audit events. |
+| Manual verification emphasis | Unit/integration tests for pricing, overlap, and transition matrix. |
+
+## Public boundary
+
+Actual rates, customer data, staff data, documents, schema implementation, and private procedures are not published.

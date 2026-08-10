@@ -1,83 +1,129 @@
-# Care Bangla — Architecture & Evolution
+# Care Bangla — Application Architecture & Upgrade Record
 
-> Public documentation edition · [Return to the project overview](../README.md)
+> Developer-facing documentation for the private implementation. [Return to the technical overview](README.md).
 
-## Architecture in brief
+## Current architecture
 
-Care Bangla is a private Next.js application that joins public healthcare content, transactional service journeys, commerce, customer self-service, and staff operations. Its architecture separates presentation, domain data, media, and operational controls so a change to one service line does not require a rewrite of the whole platform.
+Care Bangla evolved from a front-end-oriented template shape into a full **Next.js 16 App Router** application. One deployment boundary now owns page rendering, REST handlers, session protection, business validation, MongoDB persistence, GridFS media, and the staff CMS.
 
 ```mermaid
 flowchart TB
-  subgraph Experiences
-    Public[Public website]
-    Customer[Customer portal]
-    Admin[Protected CMS]
-  end
-  subgraph Application
-    Routes[Next.js route and rendering layer]
-    UI[Reusable UI and page composition]
-    Domain[Validation, authorization, business services]
-    State[Remote-data cache and local UI state]
-  end
-  subgraph Persistence
-    DB[(MongoDB domain data)]
-    Files[(Managed media storage)]
-  end
-  Experiences --> Routes --> UI
-  Routes --> Domain --> DB
-  Domain --> Files
-  UI <--> State
+  Public[Public + bilingual routes] --> AppRouter[Next.js App Router]
+  Customer[Authenticated user routes] --> AppRouter
+  Admin[Protected admin routes] --> AppRouter
+  AppRouter --> SC[Server Components / metadata]
+  AppRouter --> CC[Client Components / RTK Query]
+  AppRouter --> APIs[REST route handlers]
+  APIs --> Lib[auth · validation · pricing · redirects · media]
+  Lib --> Mongo[(MongoDB / Mongoose)]
+  Lib --> Files[(GridFS)]
 ```
 
-## Private application structure
+### Private source layout
 
-The source code is not part of this repository. The following high-level map communicates its maintainable boundaries:
+```text
+src/
+├── app/                         # Route segments, layouts, loading states, REST handlers
+│   ├── admin/                   # CMS: content, bookings, applicants, catalog, SEO, media
+│   ├── user/                    # Dashboard, messages, orders, services, profile
+│   ├── medical-shop/            # Catalog, categories, product route, cart, checkout
+│   ├── nurses/ caregivers/ nanies/ physiotherapy/ doctors/
+│   └── api/                     # 140 route handlers partitioned by audience/domain
+├── Components/                  # 149 reusable components
+│   ├── Admin/{Bookings,Cms,ServiceEditor}/
+│   ├── MedicalShop/, Messaging/, UserPortal/
+│   └── ServicePageSections/, Header/, Footer/, …
+├── views/                       # Page-level composition
+├── store/{store,StoreProvider,api}/
+├── context/                     # CartContext
+├── i18n/                        # Contexts, hook, EN/BN dictionaries
+├── lib/                         # Auth, DB, media, validation, pricing, redirects, SEO
+├── models/                      # 40 Mongoose schemas
+├── data/                        # Seed and safe editorial fallback datasets
+└── sass/{default,common,shortcode}/
+```
 
-| Area | Responsibility |
+## Rendering, state, and data access
+
+| Requirement | Implementation |
 |---|---|
-| Routing & rendering | Public, customer, and staff route segments, layouts, server rendering, and request handling. |
-| Component library | Reusable public-site, commerce, account, content-editor, and administrative interface building blocks. |
-| Page composition | Page-level assembly of shared components into coherent user journeys. |
-| Data access & state | Typed remote-data caching, mutation invalidation, and intentionally limited client-only state. |
-| Domain services | Authentication, validation, media, redirects, messaging, translation, and data utilities. |
-| Models & content | Healthcare services, care bookings, applicants, users, products, orders, content, messages, and SEO settings. |
-| Styling & assets | Shared Sass foundations, component styling, fonts, and visual assets. |
+| Initial metadata, canonical URL, redirect, or not-found decision | Server Component reads MongoDB directly through the server data layer. |
+| Interactive list/detail data | RTK Query endpoint modules call route handlers and own cached state. |
+| Browser-only cart | `CartContext` + `localStorage`, intentionally separate from Redux/MongoDB. |
+| Language selection | Public/customer and staff language contexts persist independently. |
+| Long-lived records | Accounts, bookings, orders, and messages are database-authoritative—never demo fallbacks. |
 
-## Design qualities
+`baseApi.js` is extended by `teamApi`, `servicesApi`, `blogApi`, `shopApi`, and `messageApi`. The design uses RTK Query tag invalidation, request de-duplication, focus/reconnect refetching, and conditional `skip` behavior rather than page-level `useEffect` fetch chains.
 
-| Quality | Approach |
+```ts
+// Architectural pseudocode; not copied production source.
+const { data, isLoading } = useGetShopProductsQuery(filters, {
+  skip: !filters.category,
+});
+
+dispatch(api.util.invalidateTags(['ShopProduct']));
+```
+
+## Domain service layer
+
+The `lib/` layer separates HTTP concerns from reusable domain behavior.
+
+| Area | Representative responsibilities |
 |---|---|
-| Maintainability | Domain-oriented models and service flows; reusable UI rather than duplicated page logic. |
-| Security | Protected staff access, server-side authorization, validation, secure session handling, and secret-free public documentation. |
-| Performance | Modern Next.js rendering, image optimization strategy, remote data caching, progressive loading states, and build tooling. |
-| Content velocity | Staff-editable structured content and media remove routine engineering work from common editorial changes. |
-| Resilience | Defined public-content fallback where appropriate; durable operational data remains database-authoritative. |
-| Discoverability | Metadata, canonical content identity, redirect continuity, structured data, and monitoring-oriented SEO workspace. |
-| Localization | English and Bengali experience with separated language preferences for public and staff contexts. |
+| Authentication | Session creation/verification, server guards, protected route behavior, temporary passwords. |
+| Persistence | Pooled Mongoose connections and native MongoDB support where appropriate. |
+| Validation | Zod request schemas and field-level failure responses. |
+| Booking domain | Tier pricing, availability/conflict checks, documents, applicant services, lifecycle restrictions. |
+| Content | Safe inline links, image metadata normalization, slugification, redirect target resolution. |
+| Commerce | Canonical product URLs, product redirect recovery, revalidation. |
+| Communications | Email, internal-message attachments, chat utilities, meeting-link normalization. |
+| SEO | Content analysis and structured media input. |
 
-## Evolution opportunities
+## Security boundary
 
-The platform has a strong modular base for incremental delivery. The following opportunities are intentionally presented as a roadmap, not as features already enabled in every deployment.
+1. A JWT session is stored in an httpOnly, `SameSite=Lax` cookie with a seven-day lifetime.
+2. Every staff handler applies server-side session/role validation before database work.
+3. The admin layout checks the session for UX, but it is not the authorization authority.
+4. `proxy.js` intercepts non-API staff pages, applies security headers, and redirects unauthenticated visitors before CMS rendering.
+5. Mutations validate request bodies with Zod; ownership checks protect user-private data and attachments.
 
-| Horizon | Opportunity | Value |
+The response-header baseline includes CSP, HSTS, frame protection, content-type protection, referrer policy, and an XSS-related header. Secrets and credentials are private runtime configuration—not source-controlled models or public documentation.
+
+## Media, styling, and delivery
+
+GridFS stores staff-managed images and controlled attachments. The media layer separates public image delivery from private internal-message files through a stored scope and authorization-aware delivery path. Image values support legacy URLs or `{ src, alt, title?, fileName? }` objects, allowing backward-compatible content migration.
+
+```text
+src/sass/
+├── default/       typography, fonts, variables
+├── common/        preloader, sidebar, slider, spacing, modal utilities
+├── shortcode/     banner, cards, hero, counters, pricing, tabs, CTA
+└── style.scss     application entry point
+```
+
+Bootstrap handles grid/utility foundations; custom Sass carries the public system. Ant Design is restricted to staff routes. Poppins, Rubik, and Hind Siliguri are loaded through `next/font/google` for Latin/Bengali support.
+
+| Decision | Rationale |
+|---|---|
+| App Router + Server Components | Server-side metadata/data decisions with interactive client islands. |
+| `loading.js` boundaries | Immediate feedback for data-dependent blog, service, doctor, and shop routes. |
+| RTK Query cache | Centralized loading/error state and fewer unnecessary interactive re-fetches. |
+| Modern image configuration | Constrained remote patterns and AVIF/WebP support. |
+| `serverExternalPackages` | Keeps `mongoose` out of the client bundle. |
+| Turbopack | Faster development feedback. |
+| Retired service worker | Avoids unreliable legacy Workbox behavior; manifest remains but offline caching is not active. |
+
+## Upgrade backlog
+
+| Priority | Technical upgrade | Reason |
 |---|---|---|
-| Near term | Performance budgets, automated accessibility tests, and routine dependency review | Protect quality as content and traffic grow. |
-| Near term | More granular roles and audit history | Strengthen accountability for operational changes. |
-| Mid term | Capacity-aware scheduling and staff rostering | Improve the match between service demand and available care teams. |
-| Mid term | Payment, invoice, inventory, and fulfillment integrations | Complete more transactional journeys end to end. |
-| Longer term | Clinical systems integrations and analytics warehouse | Enable deeper operational insight after appropriate compliance design. |
-| Longer term | Additional language packs and editorial review workflow | Extend access beyond the current bilingual audience. |
+| High | Unit/integration tests for pricing, status transitions, redirects, and auth guards | These are high-value domain rules. |
+| High | CI gates for linting, accessibility, production smoke tests, and dependency review | Safens the large route surface as it evolves. |
+| High | Granular staff roles and audit history | Separate editorial, dispatch, finance, and super-admin responsibilities. |
+| Medium | Observability, error tracking, and performance budgets | Converts architecture intent into production evidence. |
+| Medium | Payment, inventory, calendar, and notification adapters | Keeps external integrations behind domain-service seams. |
+| Longer term | Offline strategy and mobile worker/clinician experiences | Needs explicit privacy, conflict, and synchronisation design. |
 
-## Upgrade guardrails
+## Public boundary
 
-Future development should preserve the existing boundaries:
-
-- New care services should own their booking rules, lifecycle, and data model while reusing shared presentation primitives.
-- New public URLs should define canonical and retirement behavior before launch.
-- New integrations should be isolated behind server-side services and monitored for failure.
-- Security, privacy, accessibility, localization, and SEO need acceptance criteria—not post-launch cleanup.
-- Any healthcare-data integration requires a separate compliance, consent, and retention assessment.
-
-## Public scope
-
-This repository explains the architecture and product direction. It does not provide source code, local setup instructions, environment variables, database exports, private endpoints, or production infrastructure details.
+Folder names, module responsibilities, and patterns are documented to demonstrate engineering capability. Source implementation, private configuration, deployment workflows, data, and credentials remain closed.

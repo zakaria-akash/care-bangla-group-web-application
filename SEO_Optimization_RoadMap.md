@@ -1,72 +1,115 @@
-# Care Bangla — SEO & Discoverability Roadmap
+# Care Bangla — Technical SEO & Discoverability Roadmap
 
-> Public documentation edition · [Return to the project overview](../README.md)
+> Developer-facing SEO reference. [Return to the technical overview](README.md).
 
-## Objective
+## Architecture overview
 
-For a healthcare-services platform, discoverability must be accurate, useful, and trustworthy. Care Bangla's approach connects technical SEO with content quality, bilingual presentation, accessible media, and ongoing measurement rather than treating search ranking as a one-time checklist.
+SEO in Care Bangla is implemented as a product/runtime concern: route metadata, canonical identity, content modeling, image normalization, structured data, crawl surfaces, and staff quality tooling have to agree.
 
 ```mermaid
 flowchart LR
-  A[Accurate content] --> E[Trustworthy discovery]
-  B[Technical foundations] --> E
-  C[Bilingual experience] --> E
-  D[Measurement and improvement] --> E
+  Content[CMS content + image metadata] --> Meta[Next.js metadata]
+  Routes[Canonical route resolver] --> Meta
+  Meta --> Crawl[robots + sitemap + search engines]
+  Content --> Schema[JSON-LD]
+  Media[Structured images] --> Social[Open Graph / Twitter]
+  Admin[SEO dashboard] --> Audit[Content audit + GSC + CWV]
+  Audit --> Content
 ```
 
-## Current direction
+## Implemented technical foundations
 
-| Area | Product capability or intent |
+| Area | Implementation |
 |---|---|
-| Metadata | Shared page metadata plus dynamic metadata for content-driven routes. |
-| Canonical identity | Content-oriented URLs, history-aware redirects, and controlled recovery for changed/retired records. |
-| Structured data | Organization, FAQ, article, person, service, product, and breadcrumb patterns where relevant. |
-| Media | Descriptive image metadata designed to support accessible rendering and richer sharing previews. |
-| Content quality | An internal workspace can surface missing or weak content fields for staff review. |
-| Monitoring | Search-visibility and Core Web Vitals connections can be enabled in the protected staff environment. |
-| Localization | English/Bengali copy and metadata require intentional review rather than automatic duplication. |
+| Page metadata | Static routes export metadata; dynamic routes use server-side `generateMetadata()`. A root title template provides consistent composition. |
+| Dynamic canonical URL | Product/category/blog routes query the required model/server layer before client rendering to choose canonical/noindex/redirect behavior. |
+| Crawl control | `robots` and dynamic `sitemap` route support are part of the project’s discoverability foundation. Staff, cart, account, and transient work routes are not search targets. |
+| URL continuity | Previous slugs + `RedirectRule` enable permanent redirect to current/replacement records; unavailable records use `noindex` and relevant listing recovery. |
+| Media SEO | `ImageValue` feeds `alt`, optional title, Open Graph/Twitter imagery, and JSON-LD-safe values. |
+| Structured data | Organization, service/medical procedure, article, person/physician, product, local business, breadcrumb, and FAQ patterns. |
+| Loading/performance | Route `loading.js` feedback, Next image formats/configuration, and server-side metadata avoid client-only SEO decisions. |
 
-## Priority roadmap
+## Metadata contract
 
-### 1. Keep foundations reliable
+Every public route needs a predictable contract:
 
-- Maintain crawl rules, sitemap coverage, canonical URLs, robots directives, and indexability decisions.
-- Keep staff-only, account-specific, cart, and transient workflow views out of search results.
-- Preserve redirects when public content moves; monitor for broken internal links.
+```ts
+// Conceptual dynamic metadata flow, not private source.
+export async function generateMetadata({ params }) {
+  const entity = await repository.findPublishedOrRedirect(params.slug);
+  if (entity.redirect) return { robots: { index: false } };
 
-### 2. Publish helpful, accountable content
+  return {
+    title: entity.seo.title ?? entity.title,
+    description: entity.seo.description ?? toPlainText(entity.summary),
+    alternates: { canonical: canonicalUrl(entity) },
+    openGraph: { images: [imageSrc(entity.image)] },
+  };
+}
+```
 
-- Keep service descriptions, clinician/professional profiles, FAQs, and health articles factual, current, and audience-appropriate.
-- Use descriptive headings, concise summaries, meaningful image descriptions, and clear calls to action.
-- Assign ownership and review cycles for content that can affect patient or family decisions.
+Important implementation rules:
 
-### 3. Strengthen technical experience
+- Metadata never receives raw `InlineText`/`ImageValue` objects; normalize to plain text/URL first.
+- Server code decides redirect/not-found/noindex before interactive client components render stale content.
+- Canonical output must use the same central URL builder as visible internal links.
+- Public alternatives must be real, published records; do not redirect a removed record to an arbitrary unrelated page.
 
-- Measure real-user and lab performance, with attention to visual stability, loading experience, interaction responsiveness, and image weight.
-- Test responsive pages, accessible semantics, keyboard use, contrast, and Bengali typography.
-- Treat slow or error-prone third-party integrations as resilience concerns, not just SEO concerns.
+## JSON-LD matrix
 
-### 4. Make bilingual discovery intentional
+| Route/content | Schema pattern | Required data discipline |
+|---|---|---|
+| Root/site identity | `Organization` | Stable name, URL, logo/contact fields from approved configuration. |
+| Service detail | `Service` / relevant medical procedure pattern | Accurate scope; avoid medical claims not supported by content. |
+| Blog article | `BlogPosting` / `Article` | Author, date, image, headline, canonical main entity. |
+| Professional profile | `Person` / physician pattern | Published credential/profile data only. |
+| Product | `Product` / offer | Current availability, pricing context, image, canonical identity. |
+| Contact | `LocalBusiness` | Valid local contact/location context. |
+| Deep routes | `BreadcrumbList` | Must match the actual user-visible hierarchy. |
+| FAQ | `FAQPage` | Only public, visible question/answer content. |
 
-- Review English and Bengali titles, descriptions, headings, and social previews independently.
-- Introduce locale/canonical/hreflang policies only when they match the actual route and content model.
-- Prefer human-reviewed Bengali for high-intent health and care-service pages.
+## Content-quality audit
 
-### 5. Close the loop with measurement
+The protected SEO dashboard applies a content-health view to categories such as:
 
-| Signal | Question it helps answer |
+- page metadata completeness and title/description quality;
+- public image alternative text and descriptive context;
+- service/profile/product/blog field coverage;
+- canonical/redirect readiness;
+- structured content and publication state;
+- optional Search Console and PageSpeed/Core Web Vitals history.
+
+The audit is a prioritization tool, not a substitute for medical/editorial review or a guarantee of search performance.
+
+## Performance and Core Web Vitals
+
+| Metric | Target | Primary engineering levers |
+|---|---|---|
+| LCP | < 2.5 s | Hero/image choice, server rendering, font strategy, network weight, caching. |
+| CLS | < 0.1 | Image dimensions, stable component layout, font behavior, dynamic content reservations. |
+| INP | < 200 ms | Client bundle scope, interaction complexity, list virtualization, mutation/loading UX. |
+
+Review both lab and real-user data. A good desktop report does not prove a good Bangladesh mobile-network experience.
+
+## Bilingual SEO policy
+
+Runtime translation does not by itself create indexable Bengali search surfaces. Before expanding language-targeted routes, define:
+
+1. which routes have reviewed, durable Bengali content;
+2. title/description/Open Graph parity policy;
+3. canonical and `hreflang` relationship rules;
+4. fallback behavior when only one language version exists;
+5. human review for health, price, action, and legal text.
+
+## Roadmap
+
+| Priority | Work |
 |---|---|
-| Search coverage | Are important public pages discovered and indexed as intended? |
-| Queries and landing pages | Which care needs bring visitors to the site, and does the content meet them? |
-| Core Web Vitals | Does the experience remain fast and stable for real users? |
-| Crawl errors and redirects | Are content changes creating dead ends? |
-| Content audit | Are high-value pages missing descriptions, media context, or publication quality? |
-| Conversion paths | Can a visitor move from useful information to an appropriate service action? |
+| Immediate | Verify robots/sitemap coverage, metadata contracts, noindex rules, redirects, structured-data validation, broken-link monitoring. |
+| High | Image/alt content governance, mobile CWV budgets, real-user measurement, content ownership/review cadence. |
+| Medium | Automated Lighthouse/accessibility checks in CI, route-level metadata tests, trend alerts for search/CWV regressions. |
+| Ongoing | Health-content editorial calendar, language-aware keyword research, clinician/profile freshness, product availability hygiene. |
 
-## What success looks like
+## Public boundary
 
-Success is not a single ranking number. It is a stable, understandable, fast, bilingual experience where search visitors land on accurate care information, know the appropriate next action, and can reach a human-operated service path without misleading claims or broken links.
-
-## Public-repository boundary
-
-This roadmap does not disclose private service credentials, analytics properties, production measurements, search data, internal URLs, automation configuration, or source code. SEO implementation should always be revalidated against the active deployment.
+Private API keys, Search Console properties, analytics data, production measurements, automation scripts, and source code are intentionally excluded. This document describes the deployed design and developer responsibilities, not public operational access.

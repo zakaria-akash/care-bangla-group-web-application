@@ -2,7 +2,7 @@
 
 # Care Bangla
 
-### Healthcare services, medical commerce, and operations—connected in one private web platform
+### A private, full-stack healthcare operations platform for Bangladesh
 
 ## 🌐 Current Hosted Website
 
@@ -11,211 +11,380 @@
 > This is the initial hosted deployment. Its server or domain may change later.
 
 [![Status](https://img.shields.io/badge/Status-Active-1F9D55?style=for-the-badge)](#project-status)
-[![Source](https://img.shields.io/badge/Source-Private-475569?style=for-the-badge)](#source-code--access)
-[![Framework](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![Database](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
-[![Languages](https://img.shields.io/badge/English_%2B_Bengali-Bilingual-2563EB?style=for-the-badge)](#localization)
+[![Source](https://img.shields.io/badge/Source-Private-475569?style=for-the-badge)](#public-repository-boundary)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose_9-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongoosejs.com/)
+[![Bilingual](https://img.shields.io/badge/English_%2B_Bengali-Bilingual-2563EB?style=for-the-badge)](#internationalization)
 
-**Public documentation & product showcase** · The production source code is intentionally not included.
+**Public technical showcase** · architecture, product scope, and engineering decisions for a closed-source production project.
 
 </div>
 
 ---
 
-## At a glance
+## Overview
 
-Care Bangla is a large, integrated healthcare platform for Bangladesh. It combines a bilingual public website, service-booking journeys, a medical-equipment catalog and cart, customer self-service, and a role-protected internal CMS. The private application is a Next.js 16 product with roughly **630 application files**, **149 reusable components**, **40 data models**, and **140 API route handlers**.
+Care Bangla is a single **Next.js 16 App Router** application that combines a bilingual public healthcare website, specialized service bookings, medical-equipment commerce, a customer portal, and a self-built staff CMS. It is not a template or a collection of unrelated pages: the experiences share a domain model, media system, content architecture, authentication boundary, and operational data layer.
 
-This repository is the public counterpart of the private project. It documents the product, architecture, scope, and future direction so prospective clients and collaborators can assess the work without receiving the deployable codebase.
+| Experience | Audience | Primary capabilities |
+|---|---|---|
+| Public website | Patients and families | Services, professionals, nursing, blogs, FAQs, appointments, contact, and search in English/Bengali |
+| Care-service booking | Patients and families | Dedicated workflows for nursing, caregiver, baby/newborn care, physiotherapy, doctor consultation, and ambulance coordination |
+| Medical shop | Customers | Category/product discovery, buy/rent/refill configurations, cart, and checkout |
+| Customer portal | Registered users | Profile, service and order history, notifications, and private support messages |
+| Operations CMS | Authorized staff | Content, profiles, booking queues, applicants, catalog, users, chat, media, SEO, and settings |
 
-| Area | What it delivers |
-|---|---|
-| 🏥 Care discovery | Service, clinician, nursing, caregiver, baby-care, physiotherapy, appointment, FAQ, contact, and health-content experiences |
-| 🛒 Medical shop | Category browsing, product detail, buy/rent/refill options, cart, and checkout flow |
-| 👤 Customer portal | Account registration, profile, service and order visibility, notifications, and private support messages |
-| 🛡️ Operations CMS | Content, team, bookings, applicants, FAQs, catalog, media, users, chat, SEO, and settings management |
-| 🌐 Localization | English and Bengali presentation with independent public and admin language preferences |
+### Implementation scale
 
-## Product preview
+| Measure | Private application |
+|---|---:|
+| JavaScript/JSX application files | ~630 |
+| Reusable component files | 149 |
+| Mongoose domain models | 40 |
+| Next.js `route.js` handlers | 140 |
+| First-class application audiences | 3: public, customer, staff |
 
-The following representative screenshots show the private, authenticated operations experience. They are included so visitors can evaluate the breadth of the CMS without being given access to it. Counts, prices, names, and content visible in screenshots are capture-time examples and should not be treated as live operational data.
+## Admin-panel preview
+
+These representative screenshots document the authenticated CMS without granting access to it. Visible counts, prices, names, and content are capture-time examples—not a public API or live operational record.
 
 <table>
   <tr>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/dashboard.jpg" alt="Care Bangla operations dashboard with content and commerce metrics" /><br /><sub><b>Operations dashboard</b> — cross-module metrics, content distribution, and quick actions.</sub></td>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/Home_Page_Content.jpg" alt="Home page content editor in the Care Bangla CMS" /><br /><sub><b>Page-content editor</b> — structured marketing content managed without a deployment.</sub></td>
+    <td width="50%"><img src="pages_screenshot_images/admin_panel/dashboard.jpg" alt="Care Bangla admin dashboard with cross-module metrics and charts" /><br /><sub><b>Dashboard</b> — operational metrics, product/category distribution, recent records, and quick actions.</sub></td>
+    <td width="50%"><img src="pages_screenshot_images/admin_panel/Home_Page_Content.jpg" alt="CMS editor for the public home page" /><br /><sub><b>Structured page content</b> — public content can be managed without an application deployment.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/Service_Booking_Page.jpg" alt="Service booking administration screen" /><br /><sub><b>Service operations</b> — booking records and fulfillment workflows.</sub></td>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/Product_Update_Page.jpg" alt="Medical equipment product editor" /><br /><sub><b>Commerce management</b> — product data, imagery, pricing, availability, and publishing controls.</sub></td>
+    <td width="50%"><img src="pages_screenshot_images/admin_panel/Service_Booking_Page.jpg" alt="Admin service booking workflow" /><br /><sub><b>Service operations</b> — dedicated booking records and lifecycle management.</sub></td>
+    <td width="50%"><img src="pages_screenshot_images/admin_panel/Product_Update_Page.jpg" alt="Medical product editing interface" /><br /><sub><b>Commerce CMS</b> — product data, media, availability, pricing, and publication controls.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/Individual_Blog_Update_Page.jpg" alt="Health article editor in the Care Bangla CMS" /><br /><sub><b>Editorial publishing</b> — rich health resources with discoverability metadata.</sub></td>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/SEO_Dashboard.jpg" alt="SEO dashboard for monitoring content quality and web performance" /><br /><sub><b>SEO workspace</b> — content quality, search visibility, and web-vitals monitoring.</sub></td>
+    <td width="50%"><img src="pages_screenshot_images/admin_panel/Individual_Blog_Update_Page.jpg" alt="Blog article editor with structured content sections" /><br /><sub><b>Editorial studio</b> — structured article bands, media, rich metadata, and URL continuity.</sub></td>
+    <td width="50%"><img src="pages_screenshot_images/admin_panel/SEO_Dashboard.jpg" alt="SEO dashboard with audit and monitoring features" /><br /><sub><b>SEO workspace</b> — content-health, search, and web-vitals tooling.</sub></td>
   </tr>
 </table>
 
-Additional screens are available in [pages_screenshot_images/admin_panel](pages_screenshot_images/admin_panel), including applicants, live chat, team profiles, FAQs, content, categories, users, and media-oriented views.
+See [all admin screenshots](pages_screenshot_images/admin_panel) for FAQ, application, live-chat, user, category, profile, and content-management views.
 
-## System design
+## Technical stack
+
+| Layer | Technologies and versions | How they are used |
+|---|---|---|
+| Framework | Next.js `16.2.7`, React `18.3.1` | App Router, server/client component composition, layouts, dynamic metadata, REST route handlers |
+| Public UI | Bootstrap `5.3.3`, React-Bootstrap `2.10.4`, Sass `1.77.8` | Responsive grid, shared visual tokens, section and component styling |
+| CMS UI | Ant Design `6.4.4`, Recharts `3.8.1`, dnd-kit | Data-dense management screens, charts, sortable and drag-reorder interactions |
+| State and fetching | Redux Toolkit `2.12.0`, RTK Query, React Context | Cached server data with tag invalidation; focused client-local cart and language state |
+| Persistence | MongoDB `7.3.0`, Mongoose `9.7.0`, GridFS | Document models, pooled database access, managed image/attachment binaries |
+| Forms and validation | React Hook Form `7.78.0`, Zod `4.4.3` | Form ergonomics, schema validation, field-level server feedback |
+| Security | jose `6.2.3`, bcryptjs `3.0.3` | JWT sessions, secure cookies, password hashing, protected server actions/routes |
+| Supporting tooling | AOS, React Slick, React Icons, React Markdown, Resend, Google Maps, ExcelJS | Public interactions, rich content, communication, maps, exports, and operations support |
+
+## System architecture
 
 ```mermaid
 flowchart TB
-  Visitor[Patients & families] --> Public[Public bilingual website]
-  Customer[Registered customer] --> Portal[Customer portal]
-  Staff[Authorized staff] --> CMS[Protected operations CMS]
+  subgraph Browser
+    P[Public pages]
+    U[Customer portal]
+    A[Staff CMS]
+    Cart[Cart Context + localStorage]
+  end
 
-  Public --> App[Next.js application]
-  Portal --> App
-  CMS --> App
+  subgraph Client_Data
+    RTK[Redux Toolkit + RTK Query]
+    Cache[Tag-based query cache]
+    Lang[Language contexts]
+  end
 
-  App --> Data[(MongoDB + Mongoose)]
-  App --> Media[(GridFS media storage)]
-  App --> Integrations[Email, maps, analytics & search integrations]
+  subgraph NextJS[Next.js 16 App Router]
+    SC[Server Components / metadata]
+    CC[Client Components]
+    API[REST route handlers]
+    Guard[Proxy, auth, validation, domain services]
+  end
 
-  classDef experience fill:#EAF4FF,stroke:#2563EB,color:#172554;
-  classDef platform fill:#ECFDF5,stroke:#059669,color:#064E3B;
-  classDef data fill:#FFF7ED,stroke:#EA580C,color:#7C2D12;
-  class Public,Portal,CMS experience;
-  class App,Integrations platform;
-  class Data,Media data;
+  subgraph Data
+    Mongo[(MongoDB Atlas / Mongoose)]
+    GridFS[(GridFS managed media)]
+  end
+
+  P --> SC
+  U --> CC
+  A --> CC
+  CC --> RTK --> Cache
+  Cart --> Cart
+  RTK --> API
+  SC --> Mongo
+  API --> Guard --> Mongo
+  Guard --> GridFS
+  Lang --> P
+  Lang --> U
+  Lang --> A
 ```
 
-### Technical profile
+### Rendering and request model
 
-| Layer | Primary technologies | Purpose |
-|---|---|---|
-| Application | Next.js 16, React 18, App Router | Server and client rendering, routing, and REST handlers |
-| UI | Bootstrap 5, React-Bootstrap, Sass, Ant Design | Public design system plus data-dense internal tooling |
-| Data | MongoDB Atlas, Mongoose, GridFS | Operational records, CMS content, and managed media |
-| Client state | Redux Toolkit / RTK Query, React Context | Cached server data; focused local state for cart and language |
-| Forms & validation | React Hook Form, Zod | Structured input and server-side data validation |
-| Security | JWT sessions, httpOnly cookies, password hashing, request protection | Protected administration and trusted server boundaries |
-| Product tooling | Recharts, dnd-kit, AOS, React Slick, Google Maps | Reporting, reordering, interaction, and location UX |
+The project intentionally uses two read paths:
 
-### Private implementation shape
+- **Server Components** query MongoDB when a route must decide metadata, canonical URLs, redirect behavior, or initial rendering before the client runs.
+- **Client Components** read interactive, MongoDB-backed lists through RTK Query endpoint modules such as `teamApi`, `servicesApi`, `blogApi`, `shopApi`, and `messageApi`.
+- **Client-only state** stays outside the remote-data cache: `CartContext` owns cart quantities/modes and persists to `localStorage`; language contexts own UI preference.
+- **Operational data has no demo fallback.** Accounts, bookings, orders, messages, and staff actions remain database-authoritative. Defined public/editorial surfaces can use safe static/i18n fallback content.
 
-The application is organized around separable responsibilities rather than a monolithic page layer:
+```mermaid
+sequenceDiagram
+  participant UI as Interactive component
+  participant Q as RTK Query endpoint
+  participant R as Route handler
+  participant D as MongoDB
 
-```text
-private application/
-├── app/          route segments, layouts, server rendering, API handlers
-├── Components/   reusable public, portal, CMS, content, and commerce UI
-├── views/        page-level composition
-├── store/        Redux Toolkit + RTK Query data access
-├── context/      client-local cart state
-├── i18n/         English/Bengali language experience
-├── models/       MongoDB domain models
-├── lib/          validation, auth, data, media, redirect, and utility services
-├── data/         safe editorial fallback and seed data
-└── sass/         shared visual foundations and component styles
+  UI->>Q: useGetServicesQuery()
+  Q->>R: GET public data
+  R->>D: find published records
+  D-->>R: documents
+  R-->>Q: JSON payload
+  Q-->>UI: cached result + loading/error state
 ```
 
-The source tree and its private configuration are not mirrored here. This diagram is deliberately architectural: it communicates boundaries and extension points without exposing implementation files, access patterns, or secrets.
-
-## Feature map
-
-### Public and customer experiences
-
-- **Healthcare discovery:** responsive pages for services, clinical professionals, nursing profiles, blogs, FAQs, appointments, contact, and search.
-- **Specialist services:** distinct booking flows for nursing, caregiving, baby/newborn care, physiotherapy, and doctor consultations, plus relevant applicant journeys.
-- **Medical equipment:** searchable/category-based discovery, product detail, configurable purchase or rental intent, and cart/checkout paths.
-- **Self-service:** registration and sign-in, profile updates, service/order history, notifications, and customer-to-team messaging.
-- **Content resilience:** managed published content is preferred; defined pages can display curated fallback content when editorial data is unavailable.
-
-### Operations and content capabilities
-
-- **CMS pages:** editable home, about, contact, service, and campaign-style content blocks.
-- **Catalog and people:** management surfaces for services, products, categories, clinicians, nurses, and other published profiles.
-- **Bookings and applications:** separate operational queues aligned to each care-service workflow.
-- **Editorial:** blog publishing, structured images, inline links, FAQ categories, and publication state.
-- **Customer operations:** user accounts, private conversations, live-chat workflow, media library, and administrative settings.
-- **Visibility:** operational dashboard, content-quality checks, SEO workspace, Search Console connection, and Core Web Vitals history where configured.
-
-## Key engineering decisions
-
-| Decision | Reason and outcome |
-|---|---|
-| One application, several audiences | Public, customer, and staff experiences share domain data while retaining their own route and permission boundaries. |
-| Database-first editorial delivery | Staff can publish content without a redeploy; selected safe fallbacks protect core public pages. |
-| Structured content instead of raw HTML | Images, links, sections, and SEO fields are modeled as data so they can be rendered safely and consistently. |
-| Durable URL handling | Canonical slugs, URL history, and controlled redirect targets help preserve links when catalog or editorial records change. |
-| Split state strategy | RTK Query serves remote data caching; lightweight React context is reserved for purely local user-interface state. |
-| Separate admin language preference | Public/customer and internal staff language choices do not overwrite one another in the same browser. |
-
-An illustrative—not production—content-read pattern looks like this:
+Illustrative architecture pseudocode—not private source:
 
 ```ts
-// Pseudocode: the public site only renders published content.
-const publishedServices = await contentRepository.listPublished('services');
+const result = await servicesRepository.list({ published: true });
 
-return publishedServices.length > 0
-  ? render(publishedServices)
-  : render(curatedFallbackServices);
-```
+return result.length > 0
+  ? render(result)
+  : render(curatedBilingualFallback);
 
-```ts
-// Pseudocode: authorization and validation remain server-side.
-if (!session.hasRole('staff')) return forbidden();
-
-const command = validate(input);
+// Mutations stay on the protected server boundary.
+requireStaffSession(session);
+const command = bookingSchema.parse(input);
 return bookingService.apply(command);
 ```
 
-The snippets communicate design intent only; they are not copied from, nor sufficient to recreate, the private implementation.
+## Private codebase structure
+
+The following is the actual architectural organization of the private application, shared as a map rather than a source dump.
+
+```text
+medilo-react/
+├── src/
+│   ├── app/                    # App Router pages, layouts, loading states, API route handlers
+│   │   ├── admin/              # Protected CMS: content, bookings, people, shop, SEO, media
+│   │   ├── user/               # Customer dashboard, messages, orders, services, profile
+│   │   ├── medical-shop/       # Shop, categories, product catch-all route, cart, checkout
+│   │   ├── nurses/ caregivers/ nanies/ physiotherapy/ doctors/
+│   │   └── api/                # Public, customer, staff, media, booking, auth, and utility APIs
+│   ├── Components/
+│   │   ├── Admin/              # CMS layout, editors, booking surfaces, content primitives
+│   │   ├── MedicalShop/        # Catalog, product, cart and checkout UI
+│   │   ├── Messaging/          # Private customer/staff conversations and attachments
+│   │   ├── ServicePageSections/# Reusable service-page compositions
+│   │   └── Header/ Footer/ ... # Shared public and account experience UI
+│   ├── views/                  # Page-level composition components
+│   ├── store/                  # Redux store, provider, baseApi, RTK Query endpoint injection
+│   ├── context/                # CartContext
+│   ├── i18n/                   # LanguageContext, hooks, English/Bengali dictionaries
+│   ├── lib/                    # Auth, database, GridFS, validation, pricing, redirects, SEO, email
+│   ├── models/                 # 40 Mongoose domain schemas
+│   ├── data/                   # Seed data and safe editorial fallback datasets
+│   └── sass/                   # Default, common, and shortcode Sass layers
+├── public/                     # Static assets, fonts, manifest, media-related browser assets
+├── scripts/                    # Content/translation support scripts
+├── next.config.mjs             # Image, Sass, package, and build configuration
+└── package.json
+```
+
+### Route families
+
+| Family | Examples | Engineering purpose |
+|---|---|---|
+| Public content | `/`, `/about`, `/service/[serviceId]`, `/blog/[blogId]`, `/faq`, `/contact` | Content discovery, dynamic metadata, static fallback where defined |
+| Professionals | `/doctors/[doctorId]`, `/nurses/[nurseId]` | Published profile and service discovery |
+| Care workflows | `/nurses/book/[nurseType]`, `/caregivers/book/[caregiverType]`, `/nanies/book/[nanyType]`, `/physiotherapy/book/[type]`, `/doctors/book/[doctorType]` | Service-specific request, pricing, validation, and checkout paths |
+| Commerce | `/medical-shop/category/[categorySlug]`, `/medical-shop/product/[...slug]`, `/cart`, `/checkout` | Category-aware canonical URLs and cart/checkout state |
+| Customer account | `/auth/*`, `/user/dashboard`, `/user/messages`, `/user/orders`, `/user/services`, `/user/profile` | Owned records, user preferences, and communication |
+| Staff operations | `/admin/*`, `/admin/bookings`, `/admin/content/*`, `/admin/shop/*`, `/admin/seo/*` | Protected administrative capabilities |
+| API surface | `/api/services`, `/api/team`, `/api/blog`, `/api/content`, `/api/shop/*`, `/api/user/*`, `/api/admin/*` | REST reads/mutations partitioned by audience and authorization |
+
+## State and data-access design
+
+```mermaid
+flowchart LR
+  B[baseApi] --> T[teamApi]
+  B --> S[servicesApi]
+  B --> BL[blogApi]
+  B --> SH[shopApi]
+  B --> M[messageApi]
+  T & S & BL & SH & M --> C[RTK Query cache + tags]
+  Cart[CartContext] --> L[localStorage]
+  PublicLang[LanguageContext] --> LP[Public/user preference]
+  AdminLang[Admin language scope] --> AP[Independent staff preference]
+```
+
+| Concern | Implementation choice | Why |
+|---|---|---|
+| Remote data | RTK Query with `fetchBaseQuery`, tags, invalidation, focus/reconnect refetching, and conditional `skip` | Removes duplicated loading/caching/retry logic from interactive components. |
+| Cart | React context + `localStorage` | Synchronous, browser-local state; no MongoDB round-trip or server cache semantics needed. |
+| Language | Nested React language contexts | Public/customer and CMS language selections do not overwrite each other. |
+| Server validation | Zod schemas before mutation reaches Mongoose | Rejects malformed input at the boundary and supports field-level responses. |
+| Database access | Pooled, hot-reload-safe Mongoose connection helper | Appropriate for local development and serverless invocation patterns. |
+
+## Domain model map
+
+The private application has 40 Mongoose models. They are intentionally split by operational domain rather than stored as one generic “booking” or “content” collection.
+
+| Domain | Models |
+|---|---|
+| Identity and administration | `User`, `AdminUser`, `SeoSettings`, `SeedTombstone` |
+| Core content | `PageContent`, `Service`, `TeamMember`, `BlogPost`, `FaqCategory`, `FaqItem`, `RedirectRule` |
+| Medical commerce | `ProductCategory`, `Product`, `Order` |
+| Nursing | `Booking`, `NurseTier`, `NurseMember`, `NursingService`, `NursingGalleryTab`, `NurseApplicant` |
+| Caregiver | `CaregiverBooking`, `CaregiverTier`, `CaregiverService`, `CaregiverGalleryTab`, `CaregiverApplicant` |
+| Baby/newborn care | `BabyCareBooking`, `BabyCareTier`, `BabyCareService`, `BabyCareGalleryTab`, `NanyApplicant` |
+| Physiotherapy | `PhysiotherapyBooking`, `PhysiotherapyApplicant` |
+| Doctor consultation | `DoctorBooking`, `DoctorTier`, `DoctorService`, `DoctorApplicant` |
+| Ambulance | `AmbulanceBooking`, `AmbulanceType` |
+| Communication | `InternalConversation`, `ChatSession` |
+
+### Core relationships and content shapes
+
+```mermaid
+erDiagram
+  User ||--o{ Order : owns
+  User ||--o{ InternalConversation : opens
+  ProductCategory ||--o{ Product : classifies
+  FaqCategory ||--o{ FaqItem : groups
+  Service ||--o{ Booking : supports
+  BlogPost ||--o{ RedirectRule : preserves_identity_for
+  Product ||--o{ RedirectRule : preserves_identity_for
+```
+
+- Products and posts retain a canonical slug, previous-slug history, and ordered recovery targets.
+- Content supports structured image values (`src`, `alt`, optional `title`/file label) and safe inline link ranges instead of raw arbitrary HTML.
+- `PageContent` provides flexible JSON-driven editorial composition for page-level content.
+- Service bookings snapshot derived pricing and request state at creation; the server remains the pricing authority.
+
+## CMS and authoring architecture
+
+The staff interface is built with Ant Design and uses a responsive, collapsible administration shell. It is more than CRUD tables: it contains product-specific authoring primitives and workflow surfaces.
+
+| Area | Technical implementation highlights |
+|---|---|
+| Dashboard | Aggregated counts and Recharts bar/pie/line visualizations for live operational overview. |
+| CMS pages | Reusable editors for home, about, contact, service pages, and structured page sections. |
+| Images | Single/multi-image pickers backed by GridFS; editable alt text, title, and SEO-friendly file labels. |
+| Narrative content | `InlineLinkTextEditor` stores text plus non-overlapping link ranges; renderers avoid raw HTML injection. |
+| Products | Category-first card grid, stock/publication state, inline ordering, multi-select actions, dnd-kit batch reorder. |
+| Blog | Sections, gallery, takeaways, quote/stat/sidebar structures, SEO fields, slug history, and replacement targets. |
+| FAQ | Ordered category/question management with live/hidden state and drag ordering. |
+| Messaging | Customer/staff thread views, unread state, priority/status controls, rich reply model, protected attachments. |
+| SEO | Content audit, search data connection, and web-vitals history inside the protected CMS. |
+
+### Media pipeline
+
+```mermaid
+flowchart LR
+  Upload[Staff image upload] --> AdminAPI[Authorized media handler]
+  AdminAPI --> Bucket[(GridFS uploads bucket)]
+  Bucket --> Meta[content type, original name, scope, image metadata]
+  Public[Public image renderer] --> Stream[SEO-friendly media route]
+  Stream --> Bucket
+  Message[Private message attachment] --> Protected[Ownership/role check] --> Bucket
+```
+
+- Shared helpers cover upload, retrieval, deletion, and listing of GridFS files.
+- Public media values can be legacy URLs or structured image objects so migrations remain backward compatible.
+- Private message files use a separate scope and authorization path from public images.
+- Image transformations are handled through a controlled Next.js image configuration, with modern formats where supported.
+
+## Service workflow engineering
+
+| Service domain | Booking shape | Distinct implementation detail |
+|---|---|---|
+| Nursing | Date-range, 12/24-hour shifts; category or named-nurse path | Nurse roster, tier model, conflict checks, server-snapshotted daily pricing |
+| Caregiver | Date-range, category-based attendant path | Dedicated booking/tier/content models; no public named-caregiver roster |
+| Baby & newborn | Date-range, category-based “Nany” path | Separate data family; 24-hour staffing mode affects server-side price computation |
+| Physiotherapy | Normalized list of date/time visits | 45–60 minute visit schedule, 60-minute spacing rules, course-discount calculation |
+| Doctor consultation | Home or virtual appointment slots | Mode-aware required fields, provider schedule conflict guards, validated Google Meet link handling |
+
+Across all care workflows, the server recomputes prices and guards lifecycle transitions. Payment cannot be marked paid for a pending/cancelled record; a paid record cannot be moved back to pending/cancelled; completed records remain operationally locked except for payment reconciliation. See the individual technical workflow documents for models, route families, pricing, conflict rules, and upgrade paths.
+
+## Commerce and URL resilience
+
+```mermaid
+flowchart LR
+  A[/medical-shop] --> B[/category/:categorySlug]
+  B --> C[/product/:categorySlug/:productSlug]
+  C --> D[CartContext]
+  D --> E[Cart and checkout]
+  Old[Old slug, flat URL, wrong category] --> Redirect[Canonical resolver]
+  Redirect --> C
+  Missing[Hidden/deleted record] --> Recovery[Ordered live replacement or relevant listing]
+```
+
+- Product configuration supports purchase, rental, refill, or contact-for-price experiences.
+- Category-aware canonical URLs are constructed from the stored product identity.
+- Slug history and `RedirectRule` records preserve recovery preferences after content changes or deletion.
+- Search/filter and paginated data routes use the same catalog model as the staff CMS.
+
+## Security and operational safeguards
+
+| Control | Implementation |
+|---|---|
+| Staff session | JWT signed through `jose`, delivered in an httpOnly, `SameSite=Lax` cookie with a seven-day lifetime. |
+| Credential handling | Password hashing plus constant-time comparison; credentials are supplied through private runtime configuration, never the database or this repository. |
+| Defense in depth | Admin routes verify authorization server-side; the admin layout also checks the current session; `proxy.js` gates staff pages before CMS rendering. |
+| Browser protections | CSP, HSTS, frame, content-type, referrer, and XSS-related response headers are attached at the application boundary. |
+| Mutation integrity | Zod validation, ownership checks, publish state, and status-transition rules run before durable writes. |
+| Private files | Internal-message attachments have a protected delivery route rather than public media visibility. |
+
+## Discoverability, performance, and PWA posture
+
+- Public pages use static `metadata` or dynamic `generateMetadata()`; the root layout supplies a shared title template.
+- Dynamic product/category and blog routes resolve canonical metadata server-side; changed slugs use permanent redirects and unavailable records are `noindex` before recovery.
+- Structured image metadata feeds image attributes, Open Graph/Twitter previews, and JSON-LD without leaking structured objects to DOM attributes.
+- Organization, service, article, professional, product, breadcrumb, and FAQ schema patterns are part of the SEO approach.
+- `loading.js` boundaries support progressive feedback for data-dependent public route families.
+- Turbopack is used for development. `mongoose` remains server-external. Modern image formats are enabled where supported.
+- A web manifest is retained, but offline caching is **not currently enabled**; a legacy worker is deliberately retired rather than presenting unreliable PWA behavior.
+
+## Internationalization
+
+The runtime language system uses English and Bengali translation dictionaries, a `useLanguage()` interface, and a server translation fallback for uncatalogued interface text. Public/customer language state and internal CMS language state are intentionally stored separately. The visual system loads Poppins, Rubik, and Hind Siliguri through `next/font/google` to support Latin and Bengali interfaces.
+
+For developer-level details—translation flow, state boundaries, quality risks, and content modeling—see [Language Translation Process](Language_Translation_Process.md) and [Translation Guide](TRANSLATION_GUIDE.md).
 
 ## Project status
 
-| Capability | Status | Notes |
+| Capability | Status | Technical note |
 |---|---|---|
-| Public website and healthcare content | Active | Available through the hosted link above. |
-| Service booking journeys | Implemented | Operational flows differ by care type and can evolve independently. |
-| Medical commerce | Implemented | Catalog, cart, and checkout experiences are represented in the private application. |
-| Internal CMS | Implemented | Access is restricted to authorized staff; screenshots are provided here instead. |
-| EN / BN experience | Implemented | Localization and content process are documented below. |
-| Offline-first behavior | Not currently enabled | A web manifest exists; a service-worker caching strategy is not an active product capability. |
+| Public website / CMS / customer portal | Implemented | One shared Next.js application, distinct route and permission boundaries. |
+| Specialized care bookings | Implemented | Domain-specific collections and workflow rules—not a generic inquiry form. |
+| Medical shop | Implemented | Catalog, category/product routing, cart state, checkout, redirect resilience. |
+| SEO workspace | Implemented | Content audit and optional monitoring integrations are staff-protected. |
+| Offline-first mode | Not enabled | Install metadata exists; no active offline caching strategy. |
+| Fine-grained staff roles | Future enhancement | Current staff permission model is intentionally simpler than dispatcher/finance/editor role partitioning. |
+| Scheduling, payments, clinical integrations | Upgrade opportunities | Require vendor, consent, compliance, and operational design before activation. |
 
-## Security, privacy, and access
+## Technical documentation map
 
-Healthcare software should be explicit about what a public showcase does *not* expose. The private application uses protected administrative routes, authenticated sessions stored in httpOnly cookies, request validation, password hashing, and server-side authorization checks. Sensitive operational data, credentials, deployment configuration, database access, customer records, and private API implementation are not present in this repository.
-
-The screenshots are informational only. They do not grant access to the CMS, imply a public API, or replace a privacy/security review for a future deployment.
-
-## Extensibility and future potential
-
-The domain separation makes the platform suitable for phased growth, for example:
-
-- online payment-gateway and invoice integrations;
-- staff rostering, availability, and capacity-aware scheduling;
-- richer order fulfillment and inventory synchronization;
-- clinical workflow integrations subject to compliance review;
-- role-specific dashboards, audit trails, and reporting;
-- more language packs and translation-review workflow;
-- performance budgets, automated accessibility checks, and offline-first experiences.
-
-These are product opportunities, not promises or enabled integrations in the public deployment.
-
-## Documentation
-
-| Document | Public focus |
+| Document | Developer focus |
 |---|---|
-| [Features & content architecture](docs/FEATURES_AND_CONTENT_ARCHITECTURE.md) | Experience map, content model principles, and operational capabilities |
-| [Architecture & evolution](docs/AppStructureUpgrade.md) | System boundaries, quality attributes, and upgrade opportunities |
-| [Nursing workflow](docs/Nursing_Service_Workflow.md) | Home-nursing discovery-to-fulfillment journey |
-| [Caregiver workflow](docs/Caregiver_Service_Workflow.md) | Caregiver/attendant service journey |
-| [Baby & newborn care workflow](docs/BabyNewBornCare_Service_Workflow.md) | Family-centered newborn-care journey |
-| [Physiotherapy workflow](docs/Physiotherapy_Service_Workflow.md) | Assessment and visit-course journey |
-| [Doctor consultation workflow](docs/Doctor_Consultation_Service_Workflow.md) | Home/remote consultation journey |
-| [Localization overview](docs/Language_Translation_Process.md) | Bilingual product architecture and quality considerations |
-| [Localization content guide](docs/TRANSLATION_GUIDE.md) | Public-safe editorial translation process |
-| [SEO roadmap](docs/SEO_Optimization_RoadMap.md) | Discoverability and measurement approach |
-| [Public project audit](docs/PROJECT_AUDIT.md) | Scope, review posture, and known boundaries |
+| [Features & content architecture](FEATURES_AND_CONTENT_ARCHITECTURE.md) | URL resilience, structured authoring, message/data ownership, API families, page composition |
+| [Architecture & evolution](AppStructureUpgrade.md) | App Router organization, infrastructure decisions, performance/security evolution |
+| [Nursing workflow](Nursing_Service_Workflow.md) | Tier/date pricing, roster model, conflict and lifecycle rules |
+| [Caregiver workflow](Caregiver_Service_Workflow.md) | Category booking, data model, reuse boundaries, lifecycle logic |
+| [Baby & newborn workflow](BabyNewBornCare_Service_Workflow.md) | Nany model, staffing-price variants, booking and CMS module map |
+| [Physiotherapy workflow](Physiotherapy_Service_Workflow.md) | Visit normalization, gap conflict checks, course pricing, account-owned schedule |
+| [Doctor consultation workflow](Doctor_Consultation_Service_Workflow.md) | Home/virtual mode, appointment conflicts, fees, meeting-link handling |
+| [Language translation process](Language_Translation_Process.md) | Runtime i18n topology, translation decisions, known technical risks |
+| [Translation guide](TRANSLATION_GUIDE.md) | Dictionary/content conventions, localized data, developer checklist |
+| [SEO roadmap](SEO_Optimization_RoadMap.md) | Metadata, JSON-LD, sitemap, canonical, CWV, and monitoring strategy |
+| [Project audit](PROJECT_AUDIT.md) | Engineering review, trade-offs, risk posture, and test/upgrade recommendations |
 
-## Source code & access
+## Public repository boundary
 
-This is a **documentation-only public repository** for a private production project. It is intended for product evaluation, portfolio review, and high-level technical discussion—not local installation, code contribution, self-hosting, or API consumption.
-
-If you need a demonstration, architecture discussion, or scoped implementation engagement, use the hosted public website as the starting point. Requests for private access are evaluated separately; no credentials, environment files, database exports, or application source are published here.
+This repository intentionally excludes the application source, package lockfile, `.env` files, secrets, database data, private endpoint code, deployment configuration, and customer/operational records. The documentation names real modules, patterns, contracts, and technical decisions so a developer can evaluate the work, but it is not a self-hosting kit or a substitute for the private codebase.
 
 ---
 

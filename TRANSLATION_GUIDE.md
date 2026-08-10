@@ -1,57 +1,93 @@
-# Care Bangla — Localization Content Guide
+# Care Bangla — Localization Engineering Guide
 
-> Public-safe editorial guide · [Return to the project overview](../README.md)
+> Developer/content implementation guide for the private system. [Return to the technical overview](README.md).
 
-This guide explains how bilingual content should be prepared and reviewed conceptually. It is not a developer setup manual and intentionally omits private code, vendor configuration, API credentials, and deployment steps.
+## 1. Use the correct localization layer
 
-## A practical content workflow
+| Content class | Preferred implementation | Do not use |
+|---|---|---|
+| Repeated UI labels, buttons, validation text | Translation dictionary namespace + `useLanguage().t()` | Duplicated component literals. |
+| CMS/public editorial content | Explicit language fields or structured localized values in the relevant model | Runtime DOM substitution. |
+| Product specifications/model numbers | Translate explanatory labels; preserve factual identifiers intentionally | Blind transliteration/translation of codes. |
+| Medical/legal/payment copy | Human-reviewed language version | Unreviewed automatic output. |
+| Dates, tables, date pickers | Library/formatter locale configuration | Plain text dictionary keys alone. |
 
-```mermaid
-flowchart LR
-  A[Write approved source copy] --> B[Create Bengali draft]
-  B --> C[Human terminology review]
-  C --> D[Layout and link check]
-  D --> E[Metadata review]
-  E --> F[Publish both language variants]
+## 2. Dictionary and namespace conventions
+
+The private system uses nested English/Bengali dictionaries and a language hook. Keep paths semantic and stable; use the same structural key path in both language dictionaries.
+
+```ts
+// Example shape, not copied from source.
+const en = {
+  booking: {
+    review: { title: 'Review your request', submit: 'Submit request' },
+  },
+};
+
+const bn = {
+  booking: {
+    review: { title: 'আপনার অনুরোধ পর্যালোচনা করুন', submit: 'অনুরোধ জমা দিন' },
+  },
+};
 ```
 
-1. **Start with approved source content.** Establish the factual, medically appropriate message first.
-2. **Create a Bengali draft.** Use a qualified writer or reviewer for patient-facing material; automation may help prepare a draft but should not be the final authority.
-3. **Review terminology and tone.** Preserve the intended meaning of care instructions, urgency, eligibility, cost context, and privacy language.
-4. **Check the interface.** Confirm font rendering, mobile wrapping, buttons, dates, units, images, and links work in both languages.
-5. **Review discoverability.** Keep page titles, descriptions, headings, image descriptions, and canonical content aligned with the language experience.
-6. **Publish intentionally.** Do not publish an incomplete or unreviewed translation for critical care journeys merely to achieve nominal coverage.
+```tsx
+const { t } = useLanguage();
+return <button type="submit">{t('booking.review.submit')}</button>;
+```
 
-## Editorial checklist
+Rules:
 
-| Check | Why it matters |
+- Namespace by product area (`common`, `navigation`, `booking`, `shop`, `account`, `admin`) rather than component file name.
+- Add the English and Bengali key in the same change; avoid a silent source-language fallback for critical actions.
+- Keep interpolation identifiers stable and document the data shape a translation expects.
+- Avoid placing dynamic database entities inside dictionary files.
+
+## 3. Localized database content
+
+For durable content, use explicit field-level localization rather than attempting a deep merge between CMS records and static UI dictionaries.
+
+```ts
+// Conceptual field-per-language convention.
+type LocalizedService = {
+  title_en: string;
+  title_bn: string;
+  description_en: string;
+  description_bn: string;
+};
+
+const pick = (record, lang, field) =>
+  record[`${field}_${lang}`] ?? record[`${field}_en`] ?? record[field];
+```
+
+This pattern keeps MongoDB records queryable, makes editorial status visible, avoids context-size bloat, and provides a predictable rendering fallback. Structured `InlineText`/`ImageValue` content needs the same normalization discipline in each language variant.
+
+## 4. Review and test checklist
+
+| Check | Developer test |
 |---|---|
-| Meaning is equivalent | Medical and service information must not change meaning between languages. |
-| Reading level is appropriate | Families should be able to understand actions and next steps. |
-| Bengali text renders correctly | Font and line-height choices directly affect accessibility. |
-| Product names are intentional | Brand names, identifiers, and medical terms may need to remain in English. |
-| Links and phone actions work | A translated label must still lead to the intended destination. |
-| Metadata is localized | Search and social previews should reflect the language the visitor selected. |
-| Fallback is graceful | When only one version exists, the product should be clear about the available language. |
+| Key parity | Every required English key has Bengali equivalent and vice versa. |
+| Fallback | Missing optional localized data renders intentional fallback, not `undefined`. |
+| Persistence | Public/customer selection survives navigation/reload; staff selection remains independent. |
+| Typography | Hind Siliguri loads; Bengali wraps correctly on small screens. |
+| Interaction | Form errors, button labels, cart modes, statuses, and date controls are understandable in both languages. |
+| Metadata | Localized title/description/social preview follows route/content policy. |
+| Accessibility | `lang` attributes, readable labels, focus order, and no layout shift from language changes. |
 
-## Content patterns
+## 5. Automation boundary
 
-### Interface text
+The private application includes translation support tooling and can call a server-side translation provider for uncatalogued interface text. Treat generated output as a proposed draft. Never expose client-side credentials; validate server input/output, cache only with a clear invalidation/retention plan, and do not route personal or sensitive health information through an unapproved translator.
 
-Keep repeated interface labels concise and consistent: navigation, form actions, validation feedback, account states, and status labels should share an approved terminology set.
+## 6. Troubleshooting map
 
-### Healthcare and care-service content
+| Symptom | Likely source | First diagnostic |
+|---|---|---|
+| Raw key visible | Missing namespace/key or provider not mounted | Inspect dictionary parity and provider tree. |
+| Admin language affects public site | Incorrect shared storage/context | Confirm separate admin/public keys and scope. |
+| Bengali glyphs/squares | Font not loaded or CSS overwritten | Inspect font network/style and fallback stack. |
+| Flash of English | Asynchronous runtime fallback | Move high-frequency UI strings into local dictionary/cache. |
+| Search preview wrong language | Metadata route uses default copy | Review server metadata and canonical/locale policy. |
 
-Prefer direct, respectful language. Avoid absolute claims, ambiguous urgency, or terms that could be interpreted as a diagnosis. Content owners should ensure that care eligibility, pricing, availability, and emergency guidance remain accurate in both languages.
+## Public boundary
 
-### Commerce and catalog content
-
-Preserve exact product model identifiers, quantities, technical specifications, and currency context. Translate explanatory text while avoiding misleading changes to the product's factual attributes.
-
-## Quality ownership
-
-Product, clinical/content, and engineering owners each have a role: product confirms audience intent; qualified reviewers approve meaning; engineering ensures the experience renders, persists preference correctly, and does not regress across routes.
-
-## Public-repository boundary
-
-The private application contains the implementation details and any optional translation integrations. This public guide deliberately avoids describing secrets, credentials, automation commands, or source-code locations.
+This guide intentionally excludes translation-provider credentials, commands, source file contents, and private configuration. It documents the conventions a developer should preserve in the private codebase.

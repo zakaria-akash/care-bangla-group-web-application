@@ -1,41 +1,72 @@
-# Care Bangla — Doctor Consultation Service Journey
+# Care Bangla — Doctor Consultation Module Specification
 
-> Public workflow overview · [Return to the project overview](../README.md)
+> Developer-facing module reference. [Return to the technical overview](README.md).
 
-## Purpose
+## Mode-aware consultation domain
 
-The doctor-consultation journey provides a dedicated path for people seeking clinical guidance, whether the offered service is coordinated as an in-person/home visit or a remote consultation. It separates consultation requirements from other care-service workflows while keeping the experience coherent with the rest of the platform.
+Doctor consultation supports **home** and **virtual** modes. The chosen mode drives trusted pricing, required intake fields, appointment validation, and fulfillment data: a home visit needs address context; a virtual session needs a deliverable email/meeting path.
 
 ```mermaid
 flowchart LR
-  A[Explore doctors and consultation options] --> B[Select consultation mode]
-  B --> C[Provide request context]
-  C --> D[Review and submit]
-  D --> E[Authorized clinical operations review]
-  E --> F[Coordinate appointment or next step]
+  Discover[/service/doctor-consultation] --> Tier[Doctor tier + mode]
+  Tier --> Book[/doctors/book/:doctorType]
+  Book --> Slots[Normalize consultation slots]
+  Slots --> Guard[Hours + clash + price guard]
+  Guard --> Checkout[/doctors/checkout]
+  Checkout --> API[Doctor booking API]
+  API --> Admin[/admin/bookings]
 ```
 
-## End-to-end view
+## Model family and pricing
 
-| Stage | Patient or family experience | Private-platform capability |
+| Model | Role |
+|---|---|
+| `DoctorBooking` | User-owned consultation request, mode, slots, derived quote, lifecycle/payment, visit/virtual context, meeting links where applicable. |
+| `DoctorTier` | Tier data with home and virtual fees, qualification/presentation, and publication state. |
+| `DoctorService` | CMS-managed consultation/service catalogue. |
+| `DoctorApplicant` | Practitioner recruitment record. |
+| `TeamMember` | Published doctor profile/directory data where appropriate. |
+
+| Rule | Implementation |
+|---|---|
+| Mode fee | Home or virtual fee is chosen from `DoctorTier` server-side. |
+| Count | One appointment or a normalized short course of follow-up slots. |
+| Total | Mode fee × trusted consultation count, snapshotted on `DoctorBooking`. |
+| Hours | Consultation slots are accepted only within 08:00–22:00. |
+| Conflict | Internal slot clashes and conflict with committed booking slots are checked before persistence. |
+
+## Mode-specific validation and meeting links
+
+| Mode | Required/validated context |
+|---|---|
+| Home | Visit address and location-relevant request data. |
+| Virtual | Email required to deliver the session information. |
+| Google Meet | Only valid Google Meet URL shapes are accepted; a bare code is normalized to HTTPS; a follow-up course can carry a link per appointment. |
+
+Meeting-link validation is intentional: it prevents arbitrary URL injection in a clinical workflow and avoids promising a video link that cannot be safely delivered. The platform handles coordinator-entered links; automatic provider-calendar generation is a separate future integration.
+
+## Lifecycle and module map
+
+The shared booking lifecycle applies: payment can move to paid only after confirmation/in-progress/completion; paid records cannot revert to pending/cancelled; completion locks operational fields while allowing payment reconciliation; cancellation retains history.
+
+| Layer | Route/module family | Responsibility |
 |---|---|---|
-| Discover | Browse professional profiles and consultation services. | CMS-managed profiles, service content, and publication controls. |
-| Choose | Select an appropriate consultation path. | Mode-aware booking flow with a dedicated domain model. |
-| Request | Share the details needed to begin coordination. | Structured validation and protected operational record. |
-| Coordinate | Receive the relevant next step. | Staff queue, lifecycle controls, and customer communication surface. |
-| Follow up | Return to account history where enabled. | Account-level service visibility and private messaging. |
+| Discovery | `service/[serviceId]` → `ServiceDetailsDoctorConsultation` | Service narrative, tiers, public doctor/service content. |
+| Booking | `doctors/book/[doctorType]`, `doctors/checkout` | Mode selection, slot collection, pricing preview, authenticated review. |
+| Profiles/applicants | `doctors/[doctorId]`, `doctors/apply-as-doctor` | Published profile and recruitment paths. |
+| APIs | Doctor booking/applicant/public content handler families | Server-authoritative quote, scheduling rules, owned history. |
+| Staff UI | Unified bookings/admin doctor/content areas | Review, manual entry, lifecycle/payment/documents, CMS/profile management. |
+| Helpers | Doctor tier, availability, Google Meet, email utilities | Fee computation, clash checks, safe meeting normalisation, notification delivery. |
 
-## Design principles
+## Upgrade candidates
 
-- **Mode awareness:** consultation mode affects what the journey needs to collect and communicate.
-- **Role separation:** public pages help with discovery; protected staff tools coordinate the request.
-- **Professional pipeline:** practitioner applications and published profiles are distinct concerns.
-- **Extensibility:** schedules, provider availability, appointment reminders, and secure remote-consultation integrations can be introduced without redesigning other care workflows.
+- provider availability calendars and appointment holds;
+- approved video-provider OAuth/calendar integration;
+- payment capture/refund workflow;
+- reminders, cancellations, and rescheduling policy;
+- clinician-side portal and outcome/notes system subject to privacy/compliance design;
+- automated tests for slot conflicts, mode field validation, fee calculation, and meeting URLs.
 
-## Current boundary and future potential
+## Public boundary
 
-This is a service-request and coordination platform, not a substitute for emergency services or clinical triage. Future integration with appointment calendars, approved video providers, payment settlement, clinical note systems, and reminder services would need separate workflow, privacy, and regulatory validation.
-
-## Public-repository boundary
-
-The public documentation excludes provider and patient data, consultation notes, calendar details, service rules, private video links, source code, and administrative access procedures.
+Patient records, provider schedules, meeting links, actual prices, source code, and staff procedures are private. This document demonstrates the module’s technical shape only.

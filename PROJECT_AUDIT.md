@@ -1,59 +1,73 @@
-# Care Bangla — Public Project Review
+# Care Bangla — Engineering Audit & Technical Posture
 
-> Portfolio-oriented review · [Return to the project overview](../README.md)
+> A public technical review of the private application. [Return to the technical overview](README.md).
 
-## Review purpose and boundary
+## Audit scope
 
-This is a public-facing project review, not a penetration test, compliance certification, code audit, or production service-level agreement. It summarizes the private project's observable architecture and documented capabilities while preserving the security boundary of a closed source codebase.
+This review is based on the private project’s architecture, route/module inventory, dependency configuration, and documented behavior. It is not a third-party penetration test, compliance certification, load test, or guarantee about the public deployment. No customer records, secrets, production logs, or source archive are published here.
 
-## Project snapshot
+## Technical inventory
 
-| Dimension | Current position |
+| Dimension | Observed implementation |
 |---|---|
-| Product shape | Integrated healthcare discovery, care booking, commerce, customer self-service, and staff operations platform. |
-| Application approach | Private Next.js 16 / React 18 application with server and client rendering. |
-| Data approach | MongoDB-backed domain data with managed media storage. |
-| Operations approach | Role-protected CMS for editorial, catalog, people, booking, applicant, and customer-support work. |
-| Audience | Patients and families in Bangladesh, registered customers, care/service teams, and internal administrators. |
-| Public repository | Documentation and visual showcase only; no deployable application code. |
+| Framework | Next.js `16.2.7` + React `18.3.1`, App Router. |
+| Application size | ~630 JS/JSX files, 149 reusable components, 40 Mongoose models, 140 route handlers. |
+| Data | MongoDB/Mongoose with pooled connection strategy; GridFS for staff media and controlled attachments. |
+| State | Redux Toolkit/RTK Query for remote data; React contexts for cart/language local state. |
+| UI | Bootstrap/Sass public system; Ant Design staff system; Recharts and dnd-kit for operations. |
+| Domain coverage | Content, shop, user portal, message threads, 5 specialized care booking domains, applicants, SEO/analytics support. |
 
-## Strengths visible in the design
+## Architecture strengths
 
-- **Broad but connected scope:** the platform joins discovery, operational fulfillment, and ongoing customer interaction instead of treating the public website as a disconnected brochure.
-- **Dedicated service domains:** nursing, caregiving, newborn care, physiotherapy, and doctor consultations can vary without forcing one generic workflow.
-- **Content ownership:** staff can manage frequently changing information, media, and publication state without relying on every change being a developer release.
-- **Practical discoverability:** content metadata, URL continuity, structured authoring, and an SEO workspace support sustainable organic growth.
-- **Audience-aware accessibility:** English/Bengali support and mobile-responsive public design are first-class product concerns.
-- **Operational visibility:** dashboards, queues, and management workspaces make the administration experience concrete rather than an unspecified future idea.
+| Strength | Evidence in the design |
+|---|---|
+| Clear domain separation | Dedicated models/routes for nursing, caregiver, baby care, physiotherapy, doctor consultation, commerce, editorial, and messaging. |
+| Correct state split | RTK Query owns cacheable server data; cart/language avoid unnecessary server/cache semantics. |
+| Content resilience | Server metadata/redirect resolution, structured content primitives, canonical history, and safe editorial fallback. |
+| Operational maturity | Staff CMS covers content, media, catalog, profiles, booking queues, applicants, users, messages, and SEO. |
+| Authorization layers | Session cookie, server guards, proxy gate, client UX guard, request validation, attachment ownership. |
+| Discoverability | Dynamic metadata, canonical recovery, structured image data, JSON-LD patterns, sitemap/robots/monitoring posture. |
 
-## Risk and quality posture
+## Risk register
 
-| Topic | Publicly documented posture | Required ongoing discipline |
+| Area | Current posture | Recommended control |
 |---|---|---|
-| Access control | Protected administrative experiences and server-side authorization patterns. | Periodic role, session, and dependency review. |
-| Sensitive information | Customer and operational data are not published in this repository. | Data minimization, retention policy, consent, and incident readiness. |
-| Content accuracy | Structured, staff-managed publishing supports change control. | Clinical/editorial review and regular content updates. |
-| Availability | Database-backed platform with selected static content fallbacks. | Hosting, backup, monitoring, and recovery validation. |
-| Performance | Modern rendering and optimization-oriented tooling. | Real-device measurements, performance budgets, and image/content governance. |
-| Accessibility | Responsive UI and Bengali-capable visual foundations. | Automated and human accessibility testing, especially after content changes. |
+| Healthcare/personal data | Private database/authorization boundary exists. | Data inventory, retention, consent, breach/incident process, jurisdiction-specific review. |
+| Booking rules | Server-side pricing, conflict, and lifecycle validation. | Unit/integration tests for rule matrices and a regression suite per service. |
+| Authentication | JWT/httpOnly cookie and middleware-style page gate. | Session rotation/revocation policy, dependency monitoring, role granularity, audit event review. |
+| Rich CMS content | Structured links/images reduce raw HTML risk. | Strict schema evolution tests and editorial validation policy. |
+| External services | Email, maps, translation, search/performance providers are server-configured. | Timeouts, retry/backoff, observability, vendor/privacy review, graceful fallback. |
+| Performance | App Router, loading states, modern image settings, cache design. | Real-user monitoring, page budgets, image governance, mobile/network testing. |
+| Authorization scope | Admin vs user vs public route families are separated. | Automated ownership/negative authorization tests. |
 
-## Known boundaries and limitations
+## Test and quality gap analysis
 
-- This public repository cannot be cloned and run as a complete application; it intentionally contains no source, environment configuration, or data.
-- The hosted website and screenshots demonstrate product scope but are not an invitation to access protected operational routes.
-- No claim is made here that the product is certified for a particular healthcare, privacy, or payment standard. Such assessments are deployment- and jurisdiction-specific.
-- Offline caching is not an active product capability, even though install metadata can exist.
-- Roadmap items described elsewhere are opportunities, not delivery commitments.
+The private project has rich runtime/domain behavior that benefits from automated proof. Highest-value coverage is:
 
-## Recommended review cadence
+1. Pricing snapshots for nursing/caregiver/baby/physiotherapy/doctor paths.
+2. Date range, visit-gap, and appointment conflict edge cases.
+3. Payment/status transition rejection matrix.
+4. Canonical slug, replacement target, noindex, and missing-content fallback behavior.
+5. Admin and user ownership guards, especially private message attachments.
+6. EN/BN dictionary parity, preference isolation, mobile typography, and metadata output.
+7. Checkout/request flows under mobile viewport and slow/error responses.
 
-| Cadence | Suggested review |
+## Delivery recommendations
+
+| Horizon | Recommendation |
 |---|---|
-| On each release | Functional regression, authorization coverage, responsive layout, bilingual content, and critical-path smoke tests. |
-| Monthly | Dependency/security updates, broken-link review, content freshness, SEO monitoring, and backup verification. |
-| Quarterly | Accessibility sampling, performance analysis, role/access review, and service-workflow feedback. |
-| Before a major integration | Data-flow mapping, vendor review, consent/retention decision, failure-mode testing, and rollback plan. |
+| Immediate | CI lint/static checks, critical route smoke tests, dependency update cadence, test harness for pure domain helpers. |
+| Next | Integration tests against isolated MongoDB fixtures, role/audit model, error tracking, performance and accessibility budgets. |
+| Integration phase | Adapter boundaries for payment/calendar/video/SMS, contract tests, vendor failure behavior, consent/retention assessment. |
+| Scale phase | Observability dashboards, capacity-aware staff scheduling, analytics warehouse, feature flags for operational rollout. |
+
+## Known limitations
+
+- Offline caching is not an active feature; manifest support does not equal offline-first reliability.
+- Staff permissions are less granular than a mature finance/dispatcher/editor/super-admin model.
+- Some operational capabilities require manual coordination until calendar, payment, or workforce integrations are explicitly designed.
+- This public repository cannot be run locally: application source, private configuration, database, and deployment artifacts are intentionally withheld.
 
 ## Conclusion
 
-Care Bangla demonstrates a product-minded implementation: public trust-building, care-service intake, medical commerce, and internal operations are designed as parts of one platform. The next level of maturity comes from disciplined operational review, measured performance, privacy governance, and carefully scoped integrations—not from exposing the private codebase.
+The project demonstrates full-stack capability beyond a marketing site: route architecture, server data authority, CMS authoring primitives, workflow-specific models, media/security controls, and long-term discoverability are intentionally connected. Maturity now depends chiefly on automated verification, observability, governance, and carefully bounded integrations—not on exposing the proprietary codebase.

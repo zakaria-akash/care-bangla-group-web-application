@@ -1,39 +1,70 @@
-# Care Bangla — Caregiver & Attendant Service Journey
+# Care Bangla — Caregiver Service Module Specification
 
-> Public workflow overview · [Return to the project overview](../README.md)
+> Developer-facing module reference. [Return to the technical overview](README.md).
 
-## Purpose
+## Domain boundary: category booking, not a public roster
 
-Caregiver and attendant support has its own service workflow because household context, care duration, and matching considerations differ from other healthcare offerings. The private application represents this as a dedicated request and operations path, while still sharing the platform's design, account, and administrative foundations.
+Caregiver/attendant service reuses the care-booking architecture without assuming it is nursing. A customer books an **Attendant** category. There is no public caregiver profile route, named-caregiver selection, or `CaregiverMember` model; staff assignment remains an internal operational decision.
 
 ```mermaid
 flowchart LR
-  A[Explore caregiver support] --> B[Select service option]
-  B --> C[Share household and care needs]
-  C --> D[Review and submit]
-  D --> E[Caregiver operations queue]
-  E --> F[Assessment, coordination, and follow-up]
+  Public[/service/caregiver-service] --> Tier[Attendant tier]
+  Tier --> Book[/caregivers/book/:caregiverType]
+  Book --> Checkout[/caregivers/checkout]
+  Checkout --> API[Caregiver booking API]
+  API --> Rules[Trusted price + conflict + status rules]
+  Rules --> Queue[/admin/caregivers/bookings]
 ```
 
-## What the journey supports
+## Model family
 
-| Stage | Customer value | Operations value |
+| Model | Role |
+|---|---|
+| `CaregiverBooking` | Category-based date-range request, customer ownership, price snapshot, lifecycle, payment, and documents. |
+| `CaregiverTier` | Attendant service/presentation attributes and base rate. |
+| `CaregiverService` | Admin-managed capability/service catalogue. |
+| `CaregiverGalleryTab` | Structured public-page preview rows. |
+| `CaregiverApplicant` | Recruitment pipeline record. |
+| `PageContent('caregiver-service')` | Intro, CTA, and page-composition content. |
+
+The absence of `CaregiverMember` is intentional. It keeps public selection separate from internal staffing coordination and avoids presenting unavailable employee assignment data as a catalogue.
+
+## Pricing, conflict, and lifecycle
+
+| Concern | Technical rule |
+|---|---|
+| Shift pricing | 12-hour price comes from the selected published tier; 24-hour coverage equals two shifts. |
+| Duration | Inclusive days between submitted start/end dates. |
+| Trusted total | Server derives and snapshots total on `CaregiverBooking`; client total is presentation only. |
+| Conflict scope | Active caregiver bookings are checked within the caregiver domain; cross-service assumptions are not silently made. |
+| Payment lifecycle | Payment may become paid only for confirmed/in-progress/completed work; paid records cannot return to pending/cancelled. |
+| Immutability | Completed bookings lock operational detail except payment reconciliation; cancelled bookings are retained. |
+
+```ts
+// Architectural intent; not private source.
+const total = pricing.forCaregiverTier(tier, request.shift, request.dateRange);
+await conflicts.rejectOverlappingActiveCaregiverBooking(request);
+return bookings.create({ ...request, total });
+```
+
+## Module map
+
+| Layer | Route/module family | Notes |
 |---|---|---|
-| Discovery | Clear explanation of caregiver/attendant support and suitable service options. | Consistent service information maintained from the CMS. |
-| Request | Context-sensitive intake rather than a generic inquiry. | A structured record ready for review. |
-| Review | A clear confirmation/next-step experience. | A dedicated queue for status management and coordination. |
-| Follow-up | A durable account-linked service history where applicable. | A basis for service fulfillment and future communication. |
+| Discovery | `service/[serviceId]` → `ServiceDetailsCaregiverService` | Banner, intro, one tier card, preview rows, service grid; no roster slider. |
+| Booking | `caregivers/book/[caregiverType]`, `caregivers/checkout` | Category route only; no caregiver-details route. |
+| Applicant flow | `caregivers/apply-as-caregiver`, unified `admin/applicants` | Public form and service-aware staff review. |
+| Public API | `api/caregiver-bookings` | Authenticated creation/history and trusted server computation. |
+| Staff booking UI | `admin/caregivers/bookings`, admin caregiver handlers | Status/payment/document management and phone booking with user picker. |
+| Service CMS | `admin/services/caregiver-service` and tier/service/gallery handlers | Content, tier, service catalogue, and CTA maintenance. |
+| Shared media | GridFS + structured image helpers | Same public/private media rules used across the application. |
 
-## Engineering approach
+## Composition, fallback, and upgrades
 
-- The caregiver flow is modeled separately from nursing, baby-care, physiotherapy, and doctor consultations so its business rules can change independently.
-- Shared platform capabilities—authenticated access, validation, media, bilingual UI, notifications, and staff controls—avoid rebuilding foundational behavior per service.
-- Staff-managed service content makes it possible to update public explanations and offer details without routine code releases.
+`PageBreadcrumb`, `SectionHeading`, `TierCard`, `ServicePreviewGallery`, and shared service cards provide visual consistency with nursing. The service page is database-first with safe bundled fallback only for defined editorial content; booking/identity data never falls back.
 
-## Future potential
+Upgrade seams: internal availability/capacity matching, repeat schedules, payment events/invoice reconciliation, customer notifications, internal assignment compliance/document workflow, role-specific staff controls, and rule-engine tests.
 
-The architecture can support caregiver matching, availability windows, compatibility preferences, repeat schedules, staff assignment, digital agreements, and service-quality feedback. These are roadmap opportunities and require appropriate operational controls before activation.
+## Public boundary
 
-## Public-repository boundary
-
-This page intentionally excludes private intake fields, matching logic, pricing configuration, customer data, staff data, and application source.
+Rates, applicants, customer records, staffing decisions, source files, and operational policy are private. This is a technical pattern reference—not an integration API.

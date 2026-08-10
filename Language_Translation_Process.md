@@ -1,48 +1,87 @@
-# Care Bangla — English & Bengali Localization Overview
+# Care Bangla — English/Bengali Runtime Translation Architecture
 
-> Public documentation edition · [Return to the project overview](../README.md)
+> Developer-facing i18n reference. [Return to the technical overview](README.md).
 
-## Product goal
+## Architecture goal
 
-Care Bangla serves a Bangladeshi audience, so language is part of the product architecture rather than a cosmetic afterthought. The private application presents public and customer-facing interface content in **English and Bengali**, with a separately scoped language preference for the staff workspace.
+Care Bangla supports English and Bengali across three different experiences—public pages, authenticated customer pages, and the internal CMS—without allowing a language change in one context to unexpectedly affect the others. The implementation uses React contexts, translation dictionaries, persistent preference keys, and a server-side fallback path for uncatalogued interface copy.
 
 ```mermaid
-flowchart LR
-  Visitor[Visitor or customer] --> Switch[Language choice]
-  Staff[Authorized staff] --> AdminSwitch[Staff language choice]
-  Switch --> PublicEN[English presentation]
-  Switch --> PublicBN[Bengali presentation]
-  AdminSwitch --> AdminUI[Staff interface]
-  PublicEN --> Content[Localized UI + published content]
-  PublicBN --> Content
+flowchart TB
+  subgraph Public_customer
+    Toggle[LanguageSwitcher] --> PublicCtx[LanguageContext]
+    PublicCtx --> Dict[EN / BN dictionaries]
+    PublicCtx --> PublicKey[cb_lang preference]
+  end
+  subgraph Admin
+    AdminToggle[Admin language switcher] --> AdminCtx[Scoped admin language context]
+    AdminCtx --> Dict
+    AdminCtx --> AdminKey[cb_admin_lang preference]
+  end
+  Dict --> Hook[useLanguage: lang, t, setLang]
+  Hook --> Components[Public/customer/admin components]
+  Missing[Uncatalogued text] --> TranslationRoute[Server translation fallback]
 ```
 
-## How it is designed
+## Component topology
 
-| Concern | Public-safe description |
+| Layer | Private module responsibility |
 |---|---|
-| Interface language | Shared translation dictionaries and a language context supply common user-interface text. |
-| Published content | CMS-managed content can carry localized fields or follow an editorial translation process. |
-| Preference isolation | The public/customer preference and internal staff preference are stored independently so one does not unexpectedly change the other. |
-| Typography | Bengali-capable font choices are part of the visual system, not a late fallback. |
-| Progressive coverage | High-value journeys can be reviewed and improved without blocking the rest of the platform. |
+| Root providers | Make Redux, public language, cart, and common browser state available to public/customer routes. |
+| `LanguageContext` | Owns current public/customer language, persistent preference, dictionaries, and translation function. |
+| `useLanguage()` | Stable component-facing interface: `lang`, `t`, and `setLang`. |
+| Translation dictionaries | Nested English/Bengali namespaces for repeated interface content. |
+| `LanguageSwitcher` | Presents the language choice without forcing every individual component to manage preference state. |
+| Admin scope | Nesting/independent persistent state protects staff preference from public/customer context. |
+| Translation route/script | Optional server-supported translation fallback and dictionary-maintenance assistance. |
 
-## Translation quality principles
+## Translation decision path
 
-- Use human-reviewed Bengali for patient-facing clinical, financial, legal, and action-oriented text.
-- Keep brand names, product codes, and clinical terminology intentionally consistent rather than translating mechanically.
-- Design for text expansion, Bengali script rendering, and mixed-language catalog data.
-- Make language and locale part of metadata and search planning—not just visible labels.
-- Review changed content in both languages before publishing.
+The application distinguishes static interface copy from data/content fields:
 
-## Known product considerations
+1. A component asks `useLanguage()` for the active language and `t(key)`.
+2. Static UI copy resolves from the nested dictionary namespace.
+3. CMS/database content prefers its localized field or approved presentation fallback.
+4. Uncatalogued non-critical interface text may use the server translation fallback where configured.
+5. Patient-facing, medical, price, privacy, and action text should be human reviewed; automatic translation is a draft aid, not a publication authority.
 
-Machine translation can accelerate drafting but is not a quality guarantee. It can be especially weak for medical vocabulary, nuanced care instructions, and calls to action. Localization also requires attention to right content hierarchy, font loading, metadata, route strategy, and a consistent fallback when a translation is unavailable.
+```ts
+// Illustrative usage, not private source.
+const { lang, t } = useLanguage();
+const title = t('service.booking.title');
+const description = record[`description_${lang}`] ?? record.description;
+```
 
-## Future potential
+## Coverage model
 
-The current bilingual architecture can support review workflows, translation-memory tooling, locale-aware editorial publishing, additional regional languages, and more formal internationalized route policies. Each extension should be tested with real users and healthcare-content reviewers.
+| Surface | Translation strategy | Persistence |
+|---|---|---|
+| Public site | Dictionary-based interface + localized/static fallback content | `cb_lang` browser preference. |
+| Customer portal | Same public/customer context; account UI uses shared labels and message-facing content rules | `cb_lang` browser preference. |
+| CMS | Nested/scoped language state; Ant Design/local UI may need dedicated localization behavior | `cb_admin_lang` browser preference. |
+| CMS data | Field-per-language or structured localized content where the content model supports it | Durable database content, publication-controlled. |
 
-## Public-repository boundary
+## Technical risks and controls
 
-This overview does not publish translation keys, vendor credentials, private automation, source-file locations, or internal troubleshooting procedures. See [Localization content guide](TRANSLATION_GUIDE.md) for a public-safe editorial process.
+| Risk | Why it matters | Engineering response |
+|---|---|---|
+| Direct DOM translation | Mutating rendered DOM outside React can conflict with reconciliation and create stale/flash content. | Prefer state/context-driven render output. |
+| Missing key | An undefined lookup can silently render a key or broken label. | Namespace conventions, dictionary audit, fallback behavior, development warning path. |
+| Context leakage | Shared storage can cause admin choice to modify public experience. | Explicit separate preference keys and provider scope. |
+| Machine quality | Bengali health/care language can be semantically unsafe when literal. | Human review for high-intent/clinical content. |
+| Flash of source language | Asynchronous translation/cache misses can be visually disruptive. | Keep core labels in local dictionaries; consider client/server cache only after correctness. |
+| SEO mismatch | Runtime language state alone does not produce language-specific crawled metadata. | Align metadata, routes, canonical/hreflang policy, and localized content model deliberately. |
+| UI library locale gap | Translation dictionaries do not automatically localize date pickers/table semantics. | Wire `bn_BD` or equivalent library locale when the CMS requirement justifies it. |
+
+## Recommended engineering backlog
+
+1. Remove any obsolete/manual translation paths that bypass React rendering.
+2. Establish field-per-language conventions for durable CMS content; avoid deep-merging arbitrary database data into UI dictionaries.
+3. Add dictionary key coverage/linting and snapshot tests for priority language routes.
+4. Introduce reviewed terminology glossary for service, status, payment, and healthcare vocabulary.
+5. Decide locale route/metadata policy before adding broad `/bn/*` search targeting.
+6. Add translation cache only after privacy, invalidation, and quality ownership are defined.
+
+## Public boundary
+
+Dictionary files, vendor credentials, private translation scripts, source code, and runtime configuration are not included. The implementation topology and trade-offs are documented for technical evaluation.
