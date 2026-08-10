@@ -8,13 +8,13 @@ Home nursing is a roster-capable, date-range booking domain. Families can select
 
 ```mermaid
 flowchart LR
-  Discover[/service/nursing-care] --> Tier[Tier or nurse selection]
-  Tier --> Form[/nurses/book/:nurseType]
-  Form --> Checkout[/nurses/checkout]
-  Checkout --> API[Booking API]
-  API --> Guard[Pricing + conflict + status guard]
-  Guard --> DB[(Booking / nurse models)]
-  DB --> Admin[/admin/nurses/bookings]
+  Discover["/service/nursing-care"] --> Tier["Tier or nurse selection"]
+  Tier --> Form["/nurses/book/:nurseType"]
+  Form --> Checkout["/nurses/checkout"]
+  Checkout --> API["Booking API"]
+  API --> Guard["Pricing, conflict, and status guard"]
+  Guard --> DB[("Booking and nurse models")]
+  DB --> Admin["/admin/nurses/bookings"]
 ```
 
 ## Data model family

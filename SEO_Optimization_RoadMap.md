@@ -8,12 +8,12 @@ SEO in Care Bangla is implemented as a product/runtime concern: route metadata, 
 
 ```mermaid
 flowchart LR
-  Content[CMS content + image metadata] --> Meta[Next.js metadata]
-  Routes[Canonical route resolver] --> Meta
-  Meta --> Crawl[robots + sitemap + search engines]
-  Content --> Schema[JSON-LD]
-  Media[Structured images] --> Social[Open Graph / Twitter]
-  Admin[SEO dashboard] --> Audit[Content audit + GSC + CWV]
+  Content["CMS content and image metadata"] --> Meta["Next.js metadata"]
+  Routes["Canonical route resolver"] --> Meta
+  Meta --> Crawl["robots, sitemap, and search engines"]
+  Content --> Schema["JSON-LD"]
+  Media["Structured images"] --> Social["Open Graph / Twitter"]
+  Admin["SEO dashboard"] --> Audit["Content audit, GSC, and CWV"]
   Audit --> Content
 ```
 

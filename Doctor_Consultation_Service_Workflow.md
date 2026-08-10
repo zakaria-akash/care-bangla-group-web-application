@@ -8,13 +8,13 @@ Doctor consultation supports **home** and **virtual** modes. The chosen mode dri
 
 ```mermaid
 flowchart LR
-  Discover[/service/doctor-consultation] --> Tier[Doctor tier + mode]
-  Tier --> Book[/doctors/book/:doctorType]
-  Book --> Slots[Normalize consultation slots]
-  Slots --> Guard[Hours + clash + price guard]
-  Guard --> Checkout[/doctors/checkout]
-  Checkout --> API[Doctor booking API]
-  API --> Admin[/admin/bookings]
+  Discover["/service/doctor-consultation"] --> Tier["Doctor tier and mode"]
+  Tier --> Book["/doctors/book/:doctorType"]
+  Book --> Slots["Normalize consultation slots"]
+  Slots --> Guard["Hours, clash, and price guard"]
+  Guard --> Checkout["/doctors/checkout"]
+  Checkout --> API["Doctor booking API"]
+  API --> Admin["/admin/bookings"]
 ```
 
 ## Model family and pricing

@@ -8,12 +8,12 @@ Caregiver/attendant service reuses the care-booking architecture without assumin
 
 ```mermaid
 flowchart LR
-  Public[/service/caregiver-service] --> Tier[Attendant tier]
-  Tier --> Book[/caregivers/book/:caregiverType]
-  Book --> Checkout[/caregivers/checkout]
-  Checkout --> API[Caregiver booking API]
-  API --> Rules[Trusted price + conflict + status rules]
-  Rules --> Queue[/admin/caregivers/bookings]
+  Public["/service/caregiver-service"] --> Tier["Attendant tier"]
+  Tier --> Book["/caregivers/book/:caregiverType"]
+  Book --> Checkout["/caregivers/checkout"]
+  Checkout --> API["Caregiver booking API"]
+  API --> Rules["Trusted price, conflict, and status rules"]
+  Rules --> Queue["/admin/caregivers/bookings"]
 ```
 
 ## Model family

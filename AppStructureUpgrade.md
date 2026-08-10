@@ -8,15 +8,15 @@ Care Bangla evolved from a front-end-oriented template shape into a full **Next.
 
 ```mermaid
 flowchart TB
-  Public[Public + bilingual routes] --> AppRouter[Next.js App Router]
-  Customer[Authenticated user routes] --> AppRouter
-  Admin[Protected admin routes] --> AppRouter
-  AppRouter --> SC[Server Components / metadata]
-  AppRouter --> CC[Client Components / RTK Query]
-  AppRouter --> APIs[REST route handlers]
-  APIs --> Lib[auth · validation · pricing · redirects · media]
-  Lib --> Mongo[(MongoDB / Mongoose)]
-  Lib --> Files[(GridFS)]
+  Public["Public and bilingual routes"] --> AppRouter["Next.js App Router"]
+  Customer["Authenticated user routes"] --> AppRouter
+  Admin["Protected admin routes"] --> AppRouter
+  AppRouter --> SC["Server Components / metadata"]
+  AppRouter --> CC["Client Components / RTK Query"]
+  AppRouter --> APIs["REST route handlers"]
+  APIs --> Lib["auth, validation, pricing, redirects, media"]
+  Lib --> Mongo[("MongoDB / Mongoose")]
+  Lib --> Files[("GridFS")]
 ```
 
 ### Private source layout

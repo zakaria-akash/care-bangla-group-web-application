@@ -8,19 +8,19 @@ Care Bangla supports English and Bengali across three different experiences—pu
 
 ```mermaid
 flowchart TB
-  subgraph Public_customer
-    Toggle[LanguageSwitcher] --> PublicCtx[LanguageContext]
-    PublicCtx --> Dict[EN / BN dictionaries]
-    PublicCtx --> PublicKey[cb_lang preference]
+  subgraph Public_customer["Public and customer"]
+    Toggle["LanguageSwitcher"] --> PublicCtx["LanguageContext"]
+    PublicCtx --> Dict["EN / BN dictionaries"]
+    PublicCtx --> PublicKey["cb_lang preference"]
   end
-  subgraph Admin
-    AdminToggle[Admin language switcher] --> AdminCtx[Scoped admin language context]
+  subgraph Admin["Admin"]
+    AdminToggle["Admin language switcher"] --> AdminCtx["Scoped admin language context"]
     AdminCtx --> Dict
-    AdminCtx --> AdminKey[cb_admin_lang preference]
+    AdminCtx --> AdminKey["cb_admin_lang preference"]
   end
-  Dict --> Hook[useLanguage: lang, t, setLang]
-  Hook --> Components[Public/customer/admin components]
-  Missing[Uncatalogued text] --> TranslationRoute[Server translation fallback]
+  Dict --> Hook["useLanguage: lang, t, setLang"]
+  Hook --> Components["Public, customer, and admin components"]
+  Missing["Uncatalogued text"] --> TranslationRoute["Server translation fallback"]
 ```
 
 ## Component topology

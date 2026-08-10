@@ -6,16 +6,16 @@
 
 ```mermaid
 flowchart LR
-  Public[Public site] --> Editorial[Published content]
-  Shop[Medical shop] --> Catalog[Product/category data]
-  User[Customer portal] --> Operations[User-owned records]
-  Admin[Admin CMS] --> Editorial
+  Public["Public site"] --> Editorial["Published content"]
+  Shop["Medical shop"] --> Catalog["Product and category data"]
+  User["Customer portal"] --> Operations["User-owned records"]
+  Admin["Admin CMS"] --> Editorial
   Admin --> Catalog
   Admin --> Operations
-  Editorial --> Mongo[(MongoDB)]
+  Editorial --> Mongo[("MongoDB")]
   Catalog --> Mongo
   Operations --> Mongo
-  Admin --> GridFS[(GridFS media)]
+  Admin --> GridFS[("GridFS media")]
 ```
 
 | Surface | Read path | Write authority | Fallback rule |

@@ -8,12 +8,12 @@ Physiotherapy is a course-oriented booking domain. It models a normalized list o
 
 ```mermaid
 flowchart LR
-  Discover[/service/physiotherapy] --> Builder[/physiotherapy/book/:type]
-  Builder --> Normalize[Normalize/dedupe date-time slots]
-  Normalize --> Price[Course price + discount engine]
-  Price --> Checkout[/physiotherapy/checkout]
-  Checkout --> API[Booking handler + gap guard]
-  API --> Queue[/admin/bookings]
+  Discover["/service/physiotherapy"] --> Builder["/physiotherapy/book/:type"]
+  Builder --> Normalize["Normalize and dedupe date-time slots"]
+  Normalize --> Price["Course price and discount engine"]
+  Price --> Checkout["/physiotherapy/checkout"]
+  Checkout --> API["Booking handler and gap guard"]
+  API --> Queue["/admin/bookings"]
 ```
 
 ## Model, schedule, and pricing

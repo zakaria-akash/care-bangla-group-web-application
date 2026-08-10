@@ -10,13 +10,13 @@ This is a category booking flow. There is no `BabyCareMember`/`NanyMember` roste
 
 ```mermaid
 flowchart LR
-  Discovery[/service/baby-care] --> Tier[Nany tier]
-  Tier --> Form[/nanies/book/:nanyType]
-  Form --> Checkout[/nanies/checkout]
-  Checkout --> Server[Booking handler]
-  Server --> Pricing[Staffing-aware price computation]
-  Pricing --> DB[(BabyCareBooking)]
-  DB --> Admin[/admin/bookings]
+  Discovery["/service/baby-care"] --> Tier["Nany tier"]
+  Tier --> Form["/nanies/book/:nanyType"]
+  Form --> Checkout["/nanies/checkout"]
+  Checkout --> Server["Booking handler"]
+  Server --> Pricing["Staffing-aware price computation"]
+  Pricing --> DB[("BabyCareBooking")]
+  DB --> Admin["/admin/bookings"]
 ```
 
 ## Model and content family

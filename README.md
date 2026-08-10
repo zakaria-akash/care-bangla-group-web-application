@@ -45,27 +45,6 @@ Care Bangla is a single **Next.js 16 App Router** application that combines a bi
 | Next.js `route.js` handlers | 140 |
 | First-class application audiences | 3: public, customer, staff |
 
-## Admin-panel preview
-
-These representative screenshots document the authenticated CMS without granting access to it. Visible counts, prices, names, and content are capture-time examples—not a public API or live operational record.
-
-<table>
-  <tr>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/dashboard.jpg" alt="Care Bangla admin dashboard with cross-module metrics and charts" /><br /><sub><b>Dashboard</b> — operational metrics, product/category distribution, recent records, and quick actions.</sub></td>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/Home_Page_Content.jpg" alt="CMS editor for the public home page" /><br /><sub><b>Structured page content</b> — public content can be managed without an application deployment.</sub></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/Service_Booking_Page.jpg" alt="Admin service booking workflow" /><br /><sub><b>Service operations</b> — dedicated booking records and lifecycle management.</sub></td>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/Product_Update_Page.jpg" alt="Medical product editing interface" /><br /><sub><b>Commerce CMS</b> — product data, media, availability, pricing, and publication controls.</sub></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/Individual_Blog_Update_Page.jpg" alt="Blog article editor with structured content sections" /><br /><sub><b>Editorial studio</b> — structured article bands, media, rich metadata, and URL continuity.</sub></td>
-    <td width="50%"><img src="pages_screenshot_images/admin_panel/SEO_Dashboard.jpg" alt="SEO dashboard with audit and monitoring features" /><br /><sub><b>SEO workspace</b> — content-health, search, and web-vitals tooling.</sub></td>
-  </tr>
-</table>
-
-See [all admin screenshots](pages_screenshot_images/admin_panel) for FAQ, application, live-chat, user, category, profile, and content-management views.
-
 ## Technical stack
 
 | Layer | Technologies and versions | How they are used |
@@ -83,29 +62,29 @@ See [all admin screenshots](pages_screenshot_images/admin_panel) for FAQ, applic
 
 ```mermaid
 flowchart TB
-  subgraph Browser
-    P[Public pages]
-    U[Customer portal]
-    A[Staff CMS]
-    Cart[Cart Context + localStorage]
+  subgraph Browser["Browser"]
+    P["Public pages"]
+    U["Customer portal"]
+    A["Staff CMS"]
+    Cart["Cart Context + localStorage"]
   end
 
-  subgraph Client_Data
-    RTK[Redux Toolkit + RTK Query]
-    Cache[Tag-based query cache]
-    Lang[Language contexts]
+  subgraph Client_Data["Client data"]
+    RTK["Redux Toolkit + RTK Query"]
+    Cache["Tag-based query cache"]
+    Lang["Language contexts"]
   end
 
-  subgraph NextJS[Next.js 16 App Router]
-    SC[Server Components / metadata]
-    CC[Client Components]
-    API[REST route handlers]
-    Guard[Proxy, auth, validation, domain services]
+  subgraph NextJS["Next.js 16 App Router"]
+    SC["Server Components / metadata"]
+    CC["Client Components"]
+    API["REST route handlers"]
+    Guard["Proxy, auth, validation, domain services"]
   end
 
-  subgraph Data
-    Mongo[(MongoDB Atlas / Mongoose)]
-    GridFS[(GridFS managed media)]
+  subgraph Data["Data"]
+    Mongo[("MongoDB Atlas / Mongoose")]
+    GridFS[("GridFS managed media")]
   end
 
   P --> SC
@@ -210,15 +189,19 @@ medilo-react/
 
 ```mermaid
 flowchart LR
-  B[baseApi] --> T[teamApi]
-  B --> S[servicesApi]
-  B --> BL[blogApi]
-  B --> SH[shopApi]
-  B --> M[messageApi]
-  T & S & BL & SH & M --> C[RTK Query cache + tags]
-  Cart[CartContext] --> L[localStorage]
-  PublicLang[LanguageContext] --> LP[Public/user preference]
-  AdminLang[Admin language scope] --> AP[Independent staff preference]
+  B["baseApi"] --> T["teamApi"]
+  B --> S["servicesApi"]
+  B --> BL["blogApi"]
+  B --> SH["shopApi"]
+  B --> M["messageApi"]
+  T --> C["RTK Query cache + tags"]
+  S --> C
+  BL --> C
+  SH --> C
+  M --> C
+  Cart["CartContext"] --> L["localStorage"]
+  PublicLang["LanguageContext"] --> LP["Public/user preference"]
+  AdminLang["Admin language scope"] --> AP["Independent staff preference"]
 ```
 
 | Concern | Implementation choice | Why |
@@ -284,12 +267,12 @@ The staff interface is built with Ant Design and uses a responsive, collapsible 
 
 ```mermaid
 flowchart LR
-  Upload[Staff image upload] --> AdminAPI[Authorized media handler]
-  AdminAPI --> Bucket[(GridFS uploads bucket)]
-  Bucket --> Meta[content type, original name, scope, image metadata]
-  Public[Public image renderer] --> Stream[SEO-friendly media route]
+  Upload["Staff image upload"] --> AdminAPI["Authorized media handler"]
+  AdminAPI --> Bucket[("GridFS uploads bucket")]
+  Bucket --> Meta["content type, original name, scope, image metadata"]
+  Public["Public image renderer"] --> Stream["SEO-friendly media route"]
   Stream --> Bucket
-  Message[Private message attachment] --> Protected[Ownership/role check] --> Bucket
+  Message["Private message attachment"] --> Protected["Ownership and role check"] --> Bucket
 ```
 
 - Shared helpers cover upload, retrieval, deletion, and listing of GridFS files.
@@ -313,13 +296,13 @@ Across all care workflows, the server recomputes prices and guards lifecycle tra
 
 ```mermaid
 flowchart LR
-  A[/medical-shop] --> B[/category/:categorySlug]
-  B --> C[/product/:categorySlug/:productSlug]
-  C --> D[CartContext]
-  D --> E[Cart and checkout]
-  Old[Old slug, flat URL, wrong category] --> Redirect[Canonical resolver]
+  A["/medical-shop"] --> B["/category/:categorySlug"]
+  B --> C["/product/:categorySlug/:productSlug"]
+  C --> D["CartContext"]
+  D --> E["Cart and checkout"]
+  Old["Old slug, flat URL, wrong category"] --> Redirect["Canonical resolver"]
   Redirect --> C
-  Missing[Hidden/deleted record] --> Recovery[Ordered live replacement or relevant listing]
+  Missing["Hidden or deleted record"] --> Recovery["Ordered live replacement or relevant listing"]
 ```
 
 - Product configuration supports purchase, rental, refill, or contact-for-price experiences.
@@ -385,6 +368,43 @@ For developer-level details—translation flow, state boundaries, quality risks,
 ## Public repository boundary
 
 This repository intentionally excludes the application source, package lockfile, `.env` files, secrets, database data, private endpoint code, deployment configuration, and customer/operational records. The documentation names real modules, patterns, contracts, and technical decisions so a developer can evaluate the work, but it is not a self-hosting kit or a substitute for the private codebase.
+
+## Admin-panel screenshots
+
+The complete screenshot set is intentionally placed at the end of this README. It documents protected functionality without exposing access to the CMS. All values, names, and metrics are capture-time examples rather than live operational data.
+
+<table>
+  <tr>
+    <td width="33%"><img src="pages_screenshot_images/admin_panel/dashboard.jpg" width="320" alt="Care Bangla admin dashboard" /><br /><sub><b>Dashboard</b></sub></td>
+    <td width="33%"><img src="pages_screenshot_images/admin_panel/Home_Page_Content.jpg" width="320" alt="Home page content editor" /><br /><sub><b>Home page content</b></sub></td>
+    <td width="33%"><img src="pages_screenshot_images/admin_panel/About_Page_Content.jpg" width="320" alt="About page content editor" /><br /><sub><b>About page content</b></sub></td>
+  </tr>
+  <tr>
+    <td><img src="pages_screenshot_images/admin_panel/All_Service_Page.jpg" width="320" alt="All services content editor" /><br /><sub><b>All services</b></sub></td>
+    <td><img src="pages_screenshot_images/admin_panel/Individual_Service_Update_Page.jpg" width="320" alt="Individual service editor" /><br /><sub><b>Individual service editor</b></sub></td>
+    <td><img src="pages_screenshot_images/admin_panel/Service_Booking_Page.jpg" width="320" alt="Service booking operations page" /><br /><sub><b>Service bookings</b></sub></td>
+  </tr>
+  <tr>
+    <td><img src="pages_screenshot_images/admin_panel/Doctor_Profile_Update_Page.jpg" width="320" alt="Doctor profile editor" /><br /><sub><b>Doctor profile</b></sub></td>
+    <td><img src="pages_screenshot_images/admin_panel/Nurse_Profile_Update_Page.jpg" width="320" alt="Nurse profile editor" /><br /><sub><b>Nurse profile</b></sub></td>
+    <td><img src="pages_screenshot_images/admin_panel/Applicants_Page.jpg" width="320" alt="Applicant management page" /><br /><sub><b>Applicants</b></sub></td>
+  </tr>
+  <tr>
+    <td><img src="pages_screenshot_images/admin_panel/Product_Category_List.jpg" width="320" alt="Product category manager" /><br /><sub><b>Product categories</b></sub></td>
+    <td><img src="pages_screenshot_images/admin_panel/Category_Base_Product_List.jpg" width="320" alt="Category product list" /><br /><sub><b>Category products</b></sub></td>
+    <td><img src="pages_screenshot_images/admin_panel/Product_Update_Page.jpg" width="320" alt="Product editor" /><br /><sub><b>Product editor</b></sub></td>
+  </tr>
+  <tr>
+    <td><img src="pages_screenshot_images/admin_panel/Individual_Blog_Update_Page.jpg" width="320" alt="Blog post editor" /><br /><sub><b>Blog editor</b></sub></td>
+    <td><img src="pages_screenshot_images/admin_panel/FAQ.jpg" width="320" alt="FAQ manager" /><br /><sub><b>FAQ manager</b></sub></td>
+    <td><img src="pages_screenshot_images/admin_panel/Live_Chat.jpg" width="320" alt="Live chat manager" /><br /><sub><b>Live chat</b></sub></td>
+  </tr>
+  <tr>
+    <td><img src="pages_screenshot_images/admin_panel/User.jpg" width="320" alt="User management page" /><br /><sub><b>User management</b></sub></td>
+    <td><img src="pages_screenshot_images/admin_panel/SEO_Dashboard.jpg" width="320" alt="SEO dashboard" /><br /><sub><b>SEO dashboard</b></sub></td>
+    <td></td>
+  </tr>
+</table>
 
 ---
 
