@@ -68,10 +68,42 @@ Resolution order: current record → previous slug redirect → first published 
 ```ts
 type InlineText =
   | string
-  | { text: string; links: Array<{ start: number; end: number; href: string; target?: '_blank' }> };
+  | {
+      text: string;
+      links: Array<{ start: number; end: number; href: string; target?: '_blank' }>;
+      marks?: Array<{ start: number; end: number; type: 'strong' | 'em' | ...; value?: string }>;
+    };
 ```
 
-`InlineLinkedText` renders approved internal, external, mail, and phone links. Validation rejects invalid/overlapping ranges and unsafe destinations. Headings, tags, slugs, button labels, identifiers, phone/email fields, and structural keys remain plain text so content structure stays predictable.
+Links and emphasis are both stored as **character ranges over plain text**, never as embedded markup. Approved internal, external, mail and phone destinations render through a single component; validation rejects invalid ranges and unsafe destinations.
+
+The two range sets are independent and may overlap — bold inside a link, or a link inside italics, are both ordinary. The renderer therefore splits a value into runs sharing one link and one set of marks before nesting tags, so the emitted HTML is always well-formed however the author made the selection. Same-type ranges merge; a text edit that runs through a range drops it rather than leaving it attached to the wrong words.
+
+A value collapses back to a plain string whenever it carries no formatting, so simple copy stays simple and every legacy consumer keeps seeing a string.
+
+### Free-form content blocks
+
+Product and blog bodies are an **ordered list of typed blocks** rather than a fixed section/subsection template:
+
+```ts
+type ContentBlock =
+  | { type: 'heading'; level: 1..6; text: InlineText }
+  | { type: 'paragraph'; text: InlineText; style: { align; size; weight; italic; tone } }
+  | { type: 'bullets'; ordered: boolean; items: InlineText[] }
+  | { type: 'image'; image: ImageValue; caption?: string }
+  | { type: 'divider' };
+```
+
+The earlier model forced every product into "section → subsection → paragraphs + bullets" and every article into "photo band → paragraphs". That is a layout decision baked into storage: an author wanting two headings in a row, or a list before any prose, had nowhere to put it. A flat ordered list lets the page be whatever the content actually is, while still storing structured data — so links stay validated, text stays searchable and scoreable, and nothing an editor or a model writes can inject markup.
+
+Presentation choices are a **closed set** mapped to stylesheet classes, not free CSS, so an author cannot break the page's typography or hide text.
+
+| Behavior | Design decision |
+|---|---|
+| Legacy records | Never rewritten in place. An equivalent block list is derived on demand for display, and the editor offers a one-click import that persists only when the author saves. |
+| Pasting a document | The clipboard's HTML flavour is parsed into blocks, preserving headings, lists, links and emphasis; a plain paste falls back to the conventions people already type. Scripts, styles and frames are stripped before the tree is read. |
+| Unknown input | An unrecognised block type degrades to a paragraph rather than disappearing, so a record written by a newer editor still shows its text on an older deployment. |
+| Search health | When a record has blocks, they *are* its body: content depth, keyphrase placement, heading outline and coverage all score against what the page actually renders. |
 
 ### Structured images
 
@@ -88,7 +120,7 @@ type ImageValue =
 | Area | Technical behavior |
 |---|---|
 | Shop | Category-aware list/search/filter; buy/rent/refill/contact-for-price modes; browser-persisted cart; dnd-kit category product reordering. |
-| Blog | Paginated listing and rich article route with sections, gallery, takeaways, quote/stats/sidebar blocks, SEO, slug history, replacement targets. |
+| Blog | Paginated listing and rich article route with a block-composed body, gallery, takeaways, quote/stats/sidebar structures, SEO, slug history, replacement targets. |
 | FAQ | `FaqCategory` + `FaqItem` publication/order data, category-filtered accordion, FAQ structured data. |
 | Page composition | `PageContent` flexible JSON for public pages; specialized service models own tier/gallery/service values. |
 | Messaging | `InternalConversation` has reference, subject/category, priority/status, messages, and audience unread counts. Attachments have a private GridFS scope and ownership/role check. |

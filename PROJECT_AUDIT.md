@@ -10,12 +10,14 @@ This review is based on the private project’s architecture, route/module inven
 
 | Dimension | Observed implementation |
 |---|---|
-| Framework | Next.js `16.2.7` + React `18.3.1`, App Router. |
-| Application size | ~630 JS/JSX files, 149 reusable components, 40 Mongoose models, 140 route handlers. |
+| Framework | Next.js `16.3.0` + React `18.3.1`, App Router. |
+| Application size | ~699 JS/JSX files, 164 reusable components, 50 Mongoose models, 166 route handlers, 283 routes in a production build. |
 | Data | MongoDB/Mongoose with pooled connection strategy; GridFS for staff media and controlled attachments. |
 | State | Redux Toolkit/RTK Query for remote data; React contexts for cart/language local state. |
 | UI | Bootstrap/Sass public system; Ant Design staff system; Recharts and dnd-kit for operations. |
 | Domain coverage | Content, shop, user portal, message threads, 5 specialized care booking domains, applicants, SEO/analytics support. |
+| Assisted authoring | Supervised AI copilot with its own job, proposal, revision, usage and rate-limit collections; environment-gated and off by default. |
+| Automated verification | Deterministic unit suite covering AI safety, content-block and inline-text invariants, legacy conversion, and SEO review localization. |
 
 ## Architecture strengths
 
@@ -27,6 +29,8 @@ This review is based on the private project’s architecture, route/module inven
 | Operational maturity | Staff CMS covers content, media, catalog, profiles, booking queues, applicants, users, messages, and SEO. |
 | Authorization layers | Session cookie, server guards, proxy gate, client UX guard, request validation, attachment ownership. |
 | Discoverability | Dynamic metadata, canonical recovery, structured image data, JSON-LD patterns, sitemap/robots/monitoring posture. |
+| Deterministic content health | One shared analyzer scores every record against the full industry SEO checklist and drives the editor panel, AI field targeting, and post-proposal projection alike, so a score cannot drift between surfaces. |
+| Bounded AI authority | The assistant proposes into an explicit field allow-list, must satisfy closed output schemas, and cannot publish, price, message, or apply without a separate capability and confirmation. |
 
 ## Risk register
 
@@ -39,10 +43,19 @@ This review is based on the private project’s architecture, route/module inven
 | External services | Email, maps, translation, search/performance providers are server-configured. | Timeouts, retry/backoff, observability, vendor/privacy review, graceful fallback. |
 | Performance | App Router, loading states, modern image settings, cache design. | Real-user monitoring, page budgets, image governance, mobile/network testing. |
 | Authorization scope | Admin vs user vs public route families are separated. | Automated ownership/negative authorization tests. |
+| Assisted authoring | Server-only provider key, redaction before every call, closed schemas, field allow-lists, per-admin budget and rate limits, and a full job/usage ledger. | Live-model staging evaluation, an approved retention policy, named medical and editorial reviewers, and periodic prompt/model regression runs. |
+
+## Correction to a previously published finding
+
+An earlier revision of this audit reported that the application's security middleware was inert because the file was named `proxy.js` rather than `middleware.js`. **That finding was wrong and has been withdrawn.** Next.js 16 renamed Middleware to Proxy: `proxy.js` exporting `proxy(request)` alongside `config` is the current convention, verified against the framework's own bundled documentation. The admin gate and the security response headers were live throughout.
+
+What survived the re-check is narrower and real, and remains open: the proxy matcher excludes `/api`, so JSON endpoints are served without the frame and content-type protections that page responses receive.
+
+The episode is recorded rather than quietly edited because it illustrates a genuine hazard in reviewing a fast-moving framework: a convention that changed between major versions can make correct code look broken to a reviewer working from older knowledge.
 
 ## Test and quality gap analysis
 
-The private project has rich runtime/domain behavior that benefits from automated proof. Highest-value coverage is:
+An automated suite now exists and runs green, covering AI safety behavior, inline-text and content-block invariants, legacy content conversion, document parsing, and SEO review localization. It is a foundation rather than full coverage; the domain rules below remain the highest-value additions:
 
 1. Pricing snapshots for nursing/caregiver/baby/physiotherapy/doctor paths.
 2. Date range, visit-gap, and appointment conflict edge cases.
@@ -64,7 +77,8 @@ The private project has rich runtime/domain behavior that benefits from automate
 ## Known limitations
 
 - Offline caching is not an active feature; manifest support does not equal offline-first reliability.
-- Staff permissions are less granular than a mature finance/dispatcher/editor/super-admin model.
+- Staff permissions are less granular than a mature finance/dispatcher/editor/super-admin model, although AI use, application, audit and management are already separate capabilities.
+- The AI copilot is disabled by default and depends on a company-owned provider project, billing approval, and organizational review sign-off that are deliberately not part of the codebase.
 - Some operational capabilities require manual coordination until calendar, payment, or workforce integrations are explicitly designed.
 - This public repository cannot be run locally: application source, private configuration, database, and deployment artifacts are intentionally withheld.
 

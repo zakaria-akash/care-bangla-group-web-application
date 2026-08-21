@@ -79,6 +79,8 @@ The protected SEO dashboard applies a content-health view to categories such as:
 - structured content and publication state;
 - optional Search Console and PageSpeed/Core Web Vitals history.
 
+The audit has since been formalised into a **deterministic analyzer** that scores every record against the full industry checklist — heading hierarchy, URL form, canonical, Open Graph and Twitter inputs, structured-data prerequisites, breadcrumb parents, accessibility signals and content freshness alongside the metadata and link checks above. The same function drives the editor panel, the AI copilot's field targeting, and the projection of a proposal's effect, so a score cannot differ between surfaces. Site-wide facts such as robots.txt, mobile responsiveness, page speed and analytics are reported but explicitly not scored per record. See [SEO review](SEO_CONTENT_HEALTH.md).
+
 The audit is a prioritization tool, not a substitute for medical/editorial review or a guarantee of search performance.
 
 ## Performance and Core Web Vitals
@@ -105,6 +107,7 @@ Runtime translation does not by itself create indexable Bengali search surfaces.
 
 | Priority | Work |
 |---|---|
+| Delivered | Deterministic per-page analyzer covering the full checklist; target keyphrases with live coverage; page-introduction fallback; inline summary meter; assisted repair of individual findings. |
 | Immediate | Verify robots/sitemap coverage, metadata contracts, noindex rules, redirects, structured-data validation, broken-link monitoring. |
 | High | Image/alt content governance, mobile CWV budgets, real-user measurement, content ownership/review cadence. |
 | Medium | Automated Lighthouse/accessibility checks in CI, route-level metadata tests, trend alerts for search/CWV regressions. |

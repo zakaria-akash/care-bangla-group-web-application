@@ -16,6 +16,7 @@
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose_9-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongoosejs.com/)
 [![Bilingual](https://img.shields.io/badge/English_%2B_Bengali-Bilingual-2563EB?style=for-the-badge)](#internationalization)
+[![AI](https://img.shields.io/badge/Care_Bangla_AI-Supervised_Copilot-7C3AED?style=for-the-badge)](CARE_BANGLA_AI.md)
 
 **Public technical showcase** · architecture, product scope, and engineering decisions for a closed-source production project.
 
@@ -34,27 +35,30 @@ Care Bangla is a single **Next.js 16 App Router** application that combines a bi
 | Medical shop | Customers | Category/product discovery, buy/rent/refill configurations, cart, and checkout |
 | Customer portal | Registered users | Profile, service and order history, notifications, and private support messages |
 | Operations CMS | Authorized staff | Content, profiles, booking queues, applicants, catalog, users, chat, media, SEO, and settings |
+| Supervised AI copilot | Authorized staff | Field-level content and SEO proposals, per-field rewrites, and a page-aware assistant — reviewed by a person before anything is saved |
 
 ### Implementation scale
 
 | Measure | Private application |
 |---|---:|
-| JavaScript/JSX application files | ~630 |
-| Reusable component files | 149 |
-| Mongoose domain models | 40 |
-| Next.js `route.js` handlers | 140 |
+| JavaScript/JSX application files | ~699 |
+| Reusable component files | 164 |
+| Mongoose domain models | 50 |
+| Next.js `route.js` handlers | 166 |
+| Routes in a production build | 283 |
 | First-class application audiences | 3: public, customer, staff |
 
 ## Technical stack
 
 | Layer | Technologies and versions | How they are used |
 |---|---|---|
-| Framework | Next.js `16.2.7`, React `18.3.1` | App Router, server/client component composition, layouts, dynamic metadata, REST route handlers |
+| Framework | Next.js `16.3.0`, React `18.3.1` | App Router, server/client component composition, layouts, dynamic metadata, REST route handlers |
 | Public UI | Bootstrap `5.3.3`, React-Bootstrap `2.10.4`, Sass `1.77.8` | Responsive grid, shared visual tokens, section and component styling |
 | CMS UI | Ant Design `6.4.4`, Recharts `3.8.1`, dnd-kit | Data-dense management screens, charts, sortable and drag-reorder interactions |
 | State and fetching | Redux Toolkit `2.12.0`, RTK Query, React Context | Cached server data with tag invalidation; focused client-local cart and language state |
-| Persistence | MongoDB `7.3.0`, Mongoose `9.7.0`, GridFS | Document models, pooled database access, managed image/attachment binaries |
+| Persistence | MongoDB `7.3.0`, Mongoose `9.9.2`, GridFS | Document models, pooled database access, managed image/attachment binaries |
 | Forms and validation | React Hook Form `7.78.0`, Zod `4.4.3` | Form ergonomics, schema validation, field-level server feedback |
+| Assisted authoring | OpenAI `7.4.0` Responses API, Zod structured outputs | Server-only provider calls, closed response schemas, proposal/apply governance, usage and cost ledger |
 | Security | jose `6.2.3`, bcryptjs `3.0.3` | JWT sessions, secure cookies, password hashing, protected server actions/routes |
 | Supporting tooling | AOS, React Slick, React Icons, React Markdown, Resend, Google Maps, ExcelJS | Public interactions, rich content, communication, maps, exports, and operations support |
 
@@ -164,7 +168,8 @@ medilo-react/
 │   ├── context/                # CartContext
 │   ├── i18n/                   # LanguageContext, hooks, English/Bengali dictionaries
 │   ├── lib/                    # Auth, database, GridFS, validation, pricing, redirects, SEO, email
-│   ├── models/                 # 40 Mongoose domain schemas
+│   │   └── ai/                 # Provider boundary, prompt policy, content adapters, redaction, usage/budget
+│   ├── models/                 # 50 Mongoose domain schemas
 │   ├── data/                   # Seed data and safe editorial fallback datasets
 │   └── sass/                   # Default, common, and shortcode Sass layers
 ├── public/                     # Static assets, fonts, manifest, media-related browser assets
@@ -184,6 +189,7 @@ medilo-react/
 | Customer account | `/auth/*`, `/user/dashboard`, `/user/messages`, `/user/orders`, `/user/services`, `/user/profile` | Owned records, user preferences, and communication |
 | Staff operations | `/admin/*`, `/admin/bookings`, `/admin/content/*`, `/admin/shop/*`, `/admin/seo/*` | Protected administrative capabilities |
 | API surface | `/api/services`, `/api/team`, `/api/blog`, `/api/content`, `/api/shop/*`, `/api/user/*`, `/api/admin/*` | REST reads/mutations partitioned by audience and authorization |
+| Assisted authoring | `/api/admin/ai/*` — proposals, apply/reject, revisions, conversations, field suggestions, sources, usage, settings | Capability-gated; generating and applying are separate permissions |
 
 ## State and data-access design
 
@@ -214,7 +220,7 @@ flowchart LR
 
 ## Domain model map
 
-The private application has 40 Mongoose models. They are intentionally split by operational domain rather than stored as one generic “booking” or “content” collection.
+The private application has 50 Mongoose models. They are intentionally split by operational domain rather than stored as one generic “booking” or “content” collection.
 
 | Domain | Models |
 |---|---|
@@ -228,6 +234,7 @@ The private application has 40 Mongoose models. They are intentionally split by 
 | Doctor consultation | `DoctorBooking`, `DoctorTier`, `DoctorService`, `DoctorApplicant` |
 | Ambulance | `AmbulanceBooking`, `AmbulanceType` |
 | Communication | `InternalConversation`, `ChatSession` |
+| Assisted authoring | `AiJob`, `AiProposal`, `AiConversation`, `AiUsageLedger`, `AiRateLimit`, `AiSettings`, `ApprovedSource`, `ContentRevision` |
 
 ### Core relationships and content shapes
 
@@ -256,12 +263,14 @@ The staff interface is built with Ant Design and uses a responsive, collapsible 
 | Dashboard | Aggregated counts and Recharts bar/pie/line visualizations for live operational overview. |
 | CMS pages | Reusable editors for home, about, contact, service pages, and structured page sections. |
 | Images | Single/multi-image pickers backed by GridFS; editable alt text, title, and SEO-friendly file labels. |
-| Narrative content | `InlineLinkTextEditor` stores text plus non-overlapping link ranges; renderers avoid raw HTML injection. |
+| Narrative content | Text is stored with link ranges and emphasis ranges rather than markup, so renderers never inject raw HTML. |
+| Free-form composition | Product and blog bodies are ordered content blocks — headings H1–H6, paragraphs with a closed set of type choices, bullet and numbered lists, images, dividers — arranged in any order rather than a fixed section template. A pasted document from a word processor is parsed into those blocks. |
 | Products | Category-first card grid, stock/publication state, inline ordering, multi-select actions, dnd-kit batch reorder. |
-| Blog | Sections, gallery, takeaways, quote/stat/sidebar structures, SEO fields, slug history, and replacement targets. |
+| Blog | Block-composed body, gallery, takeaways, quote/stat/sidebar structures, SEO fields, slug history, and replacement targets. |
 | FAQ | Ordered category/question management with live/hidden state and drag ordering. |
 | Messaging | Customer/staff thread views, unread state, priority/status controls, rich reply model, protected attachments. |
-| SEO | Content audit, search data connection, and web-vitals history inside the protected CMS. |
+| SEO | Deterministic per-page content audit, target keyphrases with live coverage, search-data connection, and web-vitals history inside the protected CMS. |
+| Assisted authoring | Per-field rewrite controls, targeted repair of a specific SEO finding, and a governed proposal review with field-level diff and rollback. |
 
 ### Media pipeline
 
@@ -320,6 +329,7 @@ flowchart LR
 | Browser protections | CSP, HSTS, frame, content-type, referrer, and XSS-related response headers are attached at the application boundary. |
 | Mutation integrity | Zod validation, ownership checks, publish state, and status-transition rules run before durable writes. |
 | Private files | Internal-message attachments have a protected delivery route rather than public media visibility. |
+| Assisted authoring | The provider key stays server-side; model output must satisfy closed schemas and an explicit field allow-list; applying requires a separate capability, an unchanged content hash, and explicit confirmation, and writes an immutable revision. |
 
 ## Discoverability, performance, and PWA posture
 
@@ -327,6 +337,7 @@ flowchart LR
 - Dynamic product/category and blog routes resolve canonical metadata server-side; changed slugs use permanent redirects and unavailable records are `noindex` before recovery.
 - Structured image metadata feeds image attributes, Open Graph/Twitter previews, and JSON-LD without leaking structured objects to DOM attributes.
 - Organization, service, article, professional, product, breadcrumb, and FAQ schema patterns are part of the SEO approach.
+- A shared deterministic analyzer scores each record against the full industry checklist — heading structure, canonical, social cards, schema prerequisites, breadcrumbs, accessibility and freshness included — and the same function drives the editor panel, AI field targeting, and post-proposal projection. See [SEO review](SEO_CONTENT_HEALTH.md).
 - `loading.js` boundaries support progressive feedback for data-dependent public route families.
 - Turbopack is used for development. `mongoose` remains server-external. Modern image formats are enabled where supported.
 - A web manifest is retained, but offline caching is **not currently enabled**; a legacy worker is deliberately retired rather than presenting unreliable PWA behavior.
@@ -344,7 +355,9 @@ For developer-level details—translation flow, state boundaries, quality risks,
 | Public website / CMS / customer portal | Implemented | One shared Next.js application, distinct route and permission boundaries. |
 | Specialized care bookings | Implemented | Domain-specific collections and workflow rules—not a generic inquiry form. |
 | Medical shop | Implemented | Catalog, category/product routing, cart state, checkout, redirect resilience. |
-| SEO workspace | Implemented | Content audit and optional monitoring integrations are staff-protected. |
+| SEO workspace | Implemented | Deterministic content audit and optional monitoring integrations are staff-protected. |
+| Supervised AI copilot | Implemented, environment-gated | Off by default; requires a company-owned provider project, billing approval and an explicit server flag. |
+| Bengali AI application | Review only | Bengali proposals are reviewable; writing them is locked until dedicated localized CMS fields exist. |
 | Offline-first mode | Not enabled | Install metadata exists; no active offline caching strategy. |
 | Fine-grained staff roles | Future enhancement | Current staff permission model is intentionally simpler than dispatcher/finance/editor role partitioning. |
 | Scheduling, payments, clinical integrations | Upgrade opportunities | Require vendor, consent, compliance, and operational design before activation. |
@@ -362,6 +375,8 @@ For developer-level details—translation flow, state boundaries, quality risks,
 | [Doctor consultation workflow](Doctor_Consultation_Service_Workflow.md) | Home/virtual mode, appointment conflicts, fees, meeting-link handling |
 | [Language translation process](Language_Translation_Process.md) | Runtime i18n topology, translation decisions, known technical risks |
 | [Translation guide](TRANSLATION_GUIDE.md) | Dictionary/content conventions, localized data, developer checklist |
+| [Care Bangla AI](CARE_BANGLA_AI.md) | Supervised copilot: interaction modes, request lifecycle, safety design, operating model |
+| [SEO review](SEO_CONTENT_HEALTH.md) | Deterministic per-page content health, checklist coverage, and analyzer design decisions |
 | [SEO roadmap](SEO_Optimization_RoadMap.md) | Metadata, JSON-LD, sitemap, canonical, CWV, and monitoring strategy |
 | [Project audit](PROJECT_AUDIT.md) | Engineering review, trade-offs, risk posture, and test/upgrade recommendations |
 
