@@ -18,6 +18,7 @@ This review is based on the private project’s architecture, route/module inven
 | Domain coverage | Content, shop, user portal, message threads, 5 specialized care booking domains, applicants, SEO/analytics support. |
 | Assisted authoring | Supervised AI copilot with its own job, proposal, revision, usage and rate-limit collections; environment-gated and off by default. |
 | Automated verification | Deterministic unit suite covering AI safety, content-block and inline-text invariants, legacy conversion, and SEO review localization. |
+| Deployment posture | Native Ubuntu 24.04 VPS; Nginx terminates HTTPS and proxies to loopback Next.js; systemd supervises the application; MongoDB 8 and GridFS remain loopback-only. |
 
 ## Architecture strengths
 
@@ -44,6 +45,23 @@ This review is based on the private project’s architecture, route/module inven
 | Performance | App Router, loading states, modern image settings, cache design. | Real-user monitoring, page budgets, image governance, mobile/network testing. |
 | Authorization scope | Admin vs user vs public route families are separated. | Automated ownership/negative authorization tests. |
 | Assisted authoring | Server-only provider key, redaction before every call, closed schemas, field allow-lists, per-admin budget and rate limits, and a full job/usage ledger. | Live-model staging evaluation, an approved retention policy, named medical and editorial reviewers, and periodic prompt/model regression runs. |
+| Single-host deployment | Application and database share one VPS, so a host incident can affect both. | Verified logical backups, off-server copies, isolated restore drills, monitoring, capacity review and an upgrade path before sustained production traffic. |
+
+## Verified VPS deployment observation
+
+The native VPS deployment reached operational staging acceptance on **7 September 2026**. A read-only follow-up inspection confirmed the following without exposing credentials, private configuration, customer data or deployable infrastructure files:
+
+| Control | Observed result |
+|---|---|
+| Runtime | Ubuntu 24.04 LTS, Node.js 24 LTS, MongoDB 8 Community and Nginx are installed. |
+| Process supervision | Next.js is enabled and active under systemd, runs as an unprivileged deployment identity, reports a successful main-process exit state and has zero automatic restarts. |
+| Network boundary | Nginx alone accepts public HTTP/HTTPS traffic; Next.js and MongoDB listen only on loopback interfaces. |
+| Transport security | A valid Let's Encrypt certificate is active and HTTP security headers include HSTS. |
+| Application health | Homepage, Bengali route, dynamic sitemap and a public content API returned successful responses. |
+| Recovery | The database backup timer is active; a compressed, checksummed off-server backup and an isolated restore comparison were previously completed. |
+| Capacity snapshot | Approximately 3.1 GiB memory remained available, swap was unused and root-disk utilization was approximately 15% at inspection time. |
+
+This proves the current staging baseline, not indefinite availability, regulatory compliance, penetration-test clearance or production search readiness. The staging host still sends `noindex, nofollow`; authenticated staff/customer workflows require their separate acceptance checklist. See [VPS Deployment & Operational Observation](VPS_DEPLOYMENT_OBSERVATION.md).
 
 ## Correction to a previously published finding
 
@@ -73,6 +91,7 @@ An automated suite now exists and runs green, covering AI safety behavior, inlin
 | Next | Integration tests against isolated MongoDB fixtures, role/audit model, error tracking, performance and accessibility budgets. |
 | Integration phase | Adapter boundaries for payment/calendar/video/SMS, contract tests, vendor failure behavior, consent/retention assessment. |
 | Scale phase | Observability dashboards, capacity-aware staff scheduling, analytics warehouse, feature flags for operational rollout. |
+| Deployment gate | Commit the HTTPS-aware proxy fix, repeat authenticated acceptance, authorize production indexing, enable external monitoring, then reassess KVM capacity using real traffic. |
 
 ## Known limitations
 

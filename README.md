@@ -6,11 +6,13 @@
 
 ## 🌐 Current Hosted Website
 
-[https://care-bangla-official-site.vercel.app/](https://care-bangla-official-site.vercel.app/)
+[https://staging.carebanglabd.tech/](https://staging.carebanglabd.tech/)
 
-> This is the initial hosted deployment. Its server or domain may change later.
+> The native Hostinger VPS deployment is operationally accepted and currently runs as a protected staging release. Search indexing remains intentionally disabled until the authorized production cutover. The earlier Vercel preview remains available at [care-bangla-official-site.vercel.app](https://care-bangla-official-site.vercel.app/).
 
 [![Status](https://img.shields.io/badge/Status-Active-1F9D55?style=for-the-badge)](#project-status)
+[![Deployment](https://img.shields.io/badge/Hostinger_VPS-Operational-2563EB?style=for-the-badge)](VPS_DEPLOYMENT_OBSERVATION.md)
+[![HTTPS](https://img.shields.io/badge/HTTPS-Enabled-059669?style=for-the-badge&logo=letsencrypt)](VPS_DEPLOYMENT_OBSERVATION.md)
 [![Source](https://img.shields.io/badge/Source-Private-475569?style=for-the-badge)](#public-repository-boundary)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
@@ -56,7 +58,7 @@ Care Bangla is a single **Next.js 16 App Router** application that combines a bi
 | Public UI | Bootstrap `5.3.3`, React-Bootstrap `2.10.4`, Sass `1.77.8` | Responsive grid, shared visual tokens, section and component styling |
 | CMS UI | Ant Design `6.4.4`, Recharts `3.8.1`, dnd-kit | Data-dense management screens, charts, sortable and drag-reorder interactions |
 | State and fetching | Redux Toolkit `2.12.0`, RTK Query, React Context | Cached server data with tag invalidation; focused client-local cart and language state |
-| Persistence | MongoDB `7.3.0`, Mongoose `9.9.2`, GridFS | Document models, pooled database access, managed image/attachment binaries |
+| Persistence | MongoDB `8.0` Community, MongoDB Node driver `7.3.0`, Mongoose `9.9.2`, GridFS | Native localhost database, document models, pooled access, managed image/attachment binaries |
 | Forms and validation | React Hook Form `7.78.0`, Zod `4.4.3` | Form ergonomics, schema validation, field-level server feedback |
 | Assisted authoring | OpenAI `7.4.0` Responses API, Zod structured outputs | Server-only provider calls, closed response schemas, proposal/apply governance, usage and cost ledger |
 | Security | jose `6.2.3`, bcryptjs `3.0.3` | JWT sessions, secure cookies, password hashing, protected server actions/routes |
@@ -79,21 +81,29 @@ flowchart TB
     Lang["Language contexts"]
   end
 
-  subgraph NextJS["Next.js 16 App Router"]
+  subgraph VPS["Hostinger KVM VPS · Ubuntu 24.04 LTS"]
+    Nginx["Nginx · HTTPS reverse proxy"]
+    Service["systemd · carebangla service"]
+
+    subgraph NextJS["Next.js 16 App Router"]
     SC["Server Components / metadata"]
     CC["Client Components"]
     API["REST route handlers"]
     Guard["Proxy, auth, validation, domain services"]
+    end
+
+    subgraph Data["Private localhost data layer"]
+      Mongo[("MongoDB 8 Community / Mongoose")]
+      GridFS[("GridFS managed media")]
+    end
   end
 
-  subgraph Data["Data"]
-    Mongo[("MongoDB Atlas / Mongoose")]
-    GridFS[("GridFS managed media")]
-  end
-
-  P --> SC
-  U --> CC
-  A --> CC
+  P --> Nginx
+  U --> Nginx
+  A --> Nginx
+  Nginx --> Service
+  Service --> SC
+  Service --> CC
   CC --> RTK --> Cache
   Cart --> Cart
   RTK --> API
@@ -353,6 +363,7 @@ For developer-level details—translation flow, state boundaries, quality risks,
 | Capability | Status | Technical note |
 |---|---|---|
 | Public website / CMS / customer portal | Implemented | One shared Next.js application, distinct route and permission boundaries. |
+| Native VPS staging deployment | Operationally accepted | Ubuntu 24.04, Nginx/HTTPS, systemd-managed Next.js, native MongoDB 8, backups and reboot recovery verified; production indexing remains disabled. |
 | Specialized care bookings | Implemented | Domain-specific collections and workflow rules—not a generic inquiry form. |
 | Medical shop | Implemented | Catalog, category/product routing, cart state, checkout, redirect resilience. |
 | SEO workspace | Implemented | Deterministic content audit and optional monitoring integrations are staff-protected. |
@@ -379,6 +390,7 @@ For developer-level details—translation flow, state boundaries, quality risks,
 | [SEO review](SEO_CONTENT_HEALTH.md) | Deterministic per-page content health, checklist coverage, and analyzer design decisions |
 | [SEO roadmap](SEO_Optimization_RoadMap.md) | Metadata, JSON-LD, sitemap, canonical, CWV, and monitoring strategy |
 | [Project audit](PROJECT_AUDIT.md) | Engineering review, trade-offs, risk posture, and test/upgrade recommendations |
+| [VPS deployment observation](VPS_DEPLOYMENT_OBSERVATION.md) | Sanitized production architecture, completed deployment controls, live verification evidence, operational boundary and next gates |
 
 ## Public repository boundary
 
