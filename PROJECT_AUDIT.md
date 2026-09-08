@@ -49,7 +49,7 @@ This review is based on the private project’s architecture, route/module inven
 
 ## Verified VPS deployment observation
 
-The native VPS deployment reached operational staging acceptance on **7 September 2026**. A read-only follow-up inspection confirmed the following without exposing credentials, private configuration, customer data or deployable infrastructure files:
+The native VPS deployment reached owner-authorized commercial production acceptance on **7 September 2026**. A read-only follow-up inspection confirmed the following without exposing credentials, private configuration, customer data or deployable infrastructure files:
 
 | Control | Observed result |
 |---|---|
@@ -61,7 +61,7 @@ The native VPS deployment reached operational staging acceptance on **7 Septembe
 | Recovery | The database backup timer is active; a compressed, checksummed off-server backup and an isolated restore comparison were previously completed. |
 | Capacity snapshot | Approximately 3.1 GiB memory remained available, swap was unused and root-disk utilization was approximately 15% at inspection time. |
 
-This proves the current staging baseline, not indefinite availability, regulatory compliance, penetration-test clearance or production search readiness. The staging host still sends `noindex, nofollow`; authenticated staff/customer workflows require their separate acceptance checklist. See [VPS Deployment & Operational Observation](VPS_DEPLOYMENT_OBSERVATION.md).
+This proves the observed production infrastructure baseline, not indefinite availability, regulatory compliance or penetration-test clearance. Eligible published pages use page-level indexing controls under the canonical `https://www.carebanglabd.tech` origin; private and ineligible routes remain excluded. Authenticated staff/customer workflows still require their recurring acceptance checklist. See [VPS Deployment & Operational Observation](VPS_DEPLOYMENT_OBSERVATION.md).
 
 ## Correction to a previously published finding
 

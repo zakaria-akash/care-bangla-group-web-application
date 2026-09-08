@@ -4,21 +4,21 @@
 
 ### Native Ubuntu · Next.js · Nginx · MongoDB architecture
 
-[![Environment](https://img.shields.io/badge/Environment-VPS_Staging-2563EB?style=for-the-badge)](#-verified-deployment-status)
+[![Environment](https://img.shields.io/badge/Environment-Production-1F9D55?style=for-the-badge)](#-verified-deployment-status)
 [![Runtime](https://img.shields.io/badge/Node.js-24_LTS-339933?style=for-the-badge&logo=node.js&logoColor=white)](#-deployed-architecture)
 [![Database](https://img.shields.io/badge/MongoDB-8_Community-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](#-data-and-media-protection)
 [![Transport](https://img.shields.io/badge/HTTPS-Let's_Encrypt-059669?style=for-the-badge&logo=letsencrypt)](#-security-and-network-boundary)
 
 **Public technical showcase · Verified 7 September 2026**
 
-[Open the VPS staging website](https://staging.carebanglabd.tech/) · [Return to project overview](README.md)
+[Open the production website](https://www.carebanglabd.tech/) · [Return to project overview](README.md)
 
 </div>
 
 ---
 
 > [!IMPORTANT]
-> The infrastructure deployment is complete and operationally accepted for staging. The host intentionally returns `noindex, nofollow`, so this record must not be interpreted as authorization for production search indexing or as a claim of unrestricted public launch.
+> The infrastructure deployment is complete and owner-authorized for commercial production. `https://www.carebanglabd.tech` is the canonical HTTPS origin. Indexing is controlled page by page: eligible published public pages may be indexed, while admin, authentication, user, transaction, error and otherwise ineligible routes remain excluded.
 
 ## 🎯 Deployment outcome
 
@@ -86,8 +86,8 @@ The following results were cross-checked through a read-only SSH inspection on *
 | Bengali route | A server-rendered Bengali page returned HTTP `200`. |
 | Discoverability endpoint | Dynamic sitemap returned HTTP `200`. |
 | Data endpoint | A public CMS-backed content endpoint returned HTTP `200`. |
-| Certificate | Valid Let's Encrypt certificate observed for the staging hostname. |
-| Browser transport policy | HSTS present; staging search exclusion present. |
+| Certificate | Valid Let's Encrypt certificate observed for the production host. |
+| Browser transport policy | HSTS present; canonical production crawl controls are active. |
 | Backup scheduling | Native systemd backup timer active with its next run scheduled. |
 | Capacity snapshot | Low CPU load, no swap use and substantial free memory/disk headroom at inspection time. |
 
@@ -98,7 +98,7 @@ The following results were cross-checked through a read-only SSH inspection on *
 
 | Layer | Public exposure | Control |
 |---|---:|---|
-| Nginx | Yes—HTTP/HTTPS only | TLS termination, HTTPS redirect, proxy headers and staging search policy. |
+| Nginx | Yes—HTTP/HTTPS only | TLS termination, HTTPS redirect, canonical-host redirects and proxy headers. |
 | Next.js | No | Bound to loopback and reached only through Nginx. |
 | MongoDB | No | Bound to loopback, authenticated application identity and least-privilege backup identity. |
 | SSH administration | Restricted | Key-based deployment account; privileged work requires a separate controlled elevation step. |
@@ -156,7 +156,7 @@ GitHub Actions–driven atomic deployment is designed as a later phase, not an a
 | Public/Bengali/API smoke tests | 🟢 Verified |
 | Authenticated CMS, user, mail, AI and protected-file acceptance | 🟡 Requires the formal human workflow checklist |
 | VPS-only HTTPS proxy hotfix committed to source | 🟡 Required before the next source deployment |
-| Search indexing enabled | 🔵 Intentionally deferred until authorized cutover |
+| Page-level search indexing | 🟢 Enabled for eligible published public pages; private and ineligible routes remain excluded |
 | Continuous monitoring and alert routing | 🟡 Recommended before sustained public traffic |
 | Capacity decision for normal production load | 🟡 Measure real traffic; reassess the initial KVM tier before scale-up |
 
@@ -164,13 +164,13 @@ GitHub Actions–driven atomic deployment is designed as a later phase, not an a
 
 The deployment demonstrates a coherent full-stack production architecture rather than a static frontend upload: Nginx, Next.js server rendering and APIs, systemd lifecycle management, native MongoDB persistence, GridFS media, HTTPS, backup automation and recovery validation operate as one controlled system.
 
-The remaining work is governance-focused: preserve the deployed HTTPS-aware proxy change in source control, complete authenticated business-flow acceptance, authorize the final domain/indexing state, introduce continuous monitoring, and size the VPS from measured traffic. Until those gates are signed off, the technically successful host remains a staging release by design.
+The platform is operating as the initial commercial production release. Remaining work is continuous governance rather than a staging gate: preserve deployed fixes in source control, complete recurring authenticated business-flow checks, monitor Search Console and page-level indexing, introduce continuous uptime/resource alerting, and size the VPS from measured traffic before moving to KVM 4.
 
 ---
 
 <div align="center">
 
 **Care Bangla Full Stack Web Application**<br>
-Native VPS deployment · Verified architecture · Controlled production pathway
+Native VPS production · Verified architecture · Controlled operations
 
 </div>

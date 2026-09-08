@@ -4,11 +4,11 @@
 
 ### A private, full-stack healthcare operations platform for Bangladesh
 
-## 🌐 Current Hosted Website
+## 🌐 Production Website
 
-[https://staging.carebanglabd.tech/](https://staging.carebanglabd.tech/)
+[https://www.carebanglabd.tech/](https://www.carebanglabd.tech/)
 
-> The native Hostinger VPS deployment is operationally accepted and currently runs as a protected staging release. Search indexing remains intentionally disabled until the authorized production cutover. The earlier Vercel preview remains available at [care-bangla-official-site.vercel.app](https://care-bangla-official-site.vercel.app/).
+> The native Hostinger VPS deployment is the owner-authorized commercial production environment. `www.carebanglabd.tech` is the canonical HTTPS origin; the apex domain redirects to it, and eligible published pages support page-level search indexing.
 
 [![Status](https://img.shields.io/badge/Status-Active-1F9D55?style=for-the-badge)](#project-status)
 [![Deployment](https://img.shields.io/badge/Hostinger_VPS-Operational-2563EB?style=for-the-badge)](VPS_DEPLOYMENT_OBSERVATION.md)
@@ -363,7 +363,7 @@ For developer-level details—translation flow, state boundaries, quality risks,
 | Capability | Status | Technical note |
 |---|---|---|
 | Public website / CMS / customer portal | Implemented | One shared Next.js application, distinct route and permission boundaries. |
-| Native VPS staging deployment | Operationally accepted | Ubuntu 24.04, Nginx/HTTPS, systemd-managed Next.js, native MongoDB 8, backups and reboot recovery verified; production indexing remains disabled. |
+| Native VPS production deployment | Operationally accepted | Ubuntu 24.04, Nginx/HTTPS, systemd-managed Next.js, native MongoDB 8, backups and reboot recovery verified; eligible public pages use page-level indexing controls. |
 | Specialized care bookings | Implemented | Domain-specific collections and workflow rules—not a generic inquiry form. |
 | Medical shop | Implemented | Catalog, category/product routing, cart state, checkout, redirect resilience. |
 | SEO workspace | Implemented | Deterministic content audit and optional monitoring integrations are staff-protected. |
