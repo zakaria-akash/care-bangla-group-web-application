@@ -11,14 +11,14 @@
 
 **Public technical showcase · Verified 7 September 2026**
 
-[Open the production website](https://www.carebanglabd.tech/) · [Return to project overview](README.md)
+[Open the production website](https://www.carebangla.com.bd/) · [Return to project overview](README.md)
 
 </div>
 
 ---
 
 > [!IMPORTANT]
-> The infrastructure deployment is complete and owner-authorized for commercial production. `https://www.carebanglabd.tech` is the canonical HTTPS origin. Indexing is controlled page by page: eligible published public pages may be indexed, while admin, authentication, user, transaction, error and otherwise ineligible routes remain excluded.
+> The infrastructure deployment is complete and owner-authorized for commercial production. `https://www.carebangla.com.bd` is the canonical HTTPS origin. Indexing is controlled page by page: eligible published pages may be indexed, while admin, authentication, user, transaction, error and otherwise ineligible routes remain excluded.
 
 ## 🎯 Deployment outcome
 
