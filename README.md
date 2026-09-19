@@ -6,9 +6,9 @@
 
 ## 🌐 Production Website
 
-[https://www.carebanglabd.tech/](https://www.carebanglabd.tech/)
+[https://www.carebangla.com.bd/](https://www.carebangla.com.bd/)
 
-> The native Hostinger VPS deployment is the owner-authorized commercial production environment. `www.carebanglabd.tech` is the canonical HTTPS origin; the apex domain redirects to it, and eligible published pages support page-level search indexing.
+> The native Hostinger VPS deployment is the owner-authorized commercial production environment. `www.carebangla.com.bd` is the canonical HTTPS origin; the apex domain redirects to it, and eligible published pages support page-level search indexing.
 
 [![Status](https://img.shields.io/badge/Status-Active-1F9D55?style=for-the-badge)](#project-status)
 [![Deployment](https://img.shields.io/badge/Hostinger_VPS-Operational-2563EB?style=for-the-badge)](VPS_DEPLOYMENT_OBSERVATION.md)
@@ -19,6 +19,8 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose_9-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongoosejs.com/)
 [![Bilingual](https://img.shields.io/badge/English_%2B_Bengali-Bilingual-2563EB?style=for-the-badge)](#internationalization)
 [![AI](https://img.shields.io/badge/Care_Bangla_AI-Supervised_Copilot-7C3AED?style=for-the-badge)](CARE_BANGLA_AI.md)
+[![SEO](https://img.shields.io/badge/SEO-Structured_%2B_Reviewable-F59E0B?style=for-the-badge)](SEO_Optimization_RoadMap.md)
+[![Media](https://img.shields.io/badge/Media-GridFS_Managed-0EA5E9?style=for-the-badge)](FEATURES_AND_CONTENT_ARCHITECTURE.md)
 
 **Public technical showcase** · architecture, product scope, and engineering decisions for a closed-source production project.
 
@@ -29,6 +31,14 @@
 ## Overview
 
 Care Bangla is a single **Next.js 16 App Router** application that combines a bilingual public healthcare website, specialized service bookings, medical-equipment commerce, a customer portal, and a self-built staff CMS. It is not a template or a collection of unrelated pages: the experiences share a domain model, media system, content architecture, authentication boundary, and operational data layer.
+
+### Featured production capabilities
+
+- **Discoverable public content:** route-aware metadata, canonical URLs, JSON-LD, robots/sitemap surfaces, and staff SEO-health checks for eligible public pages.
+- **Bilingual delivery:** English and Bengali public, customer, and staff experiences with a controlled translation architecture.
+- **Operational workflows:** specialized care bookings, customer conversations, applications, product/catalogue operations, and protected CMS queues.
+- **Governed AI assistance:** content and SEO proposals are scoped to approved fields and require a human review before saving.
+- **Managed media:** GridFS-backed images and attachments are handled through protected application flows rather than public file-system access.
 
 | Experience | Audience | Primary capabilities |
 |---|---|---|
